@@ -9,6 +9,9 @@ The backend is responsible for the database and exposing the API.
 
 Update your app/config.py file with the PostgreSQL DB settings and ensure the database is created.
 
+Ensure you have installed the requirements:
+`pip3 install -r requirements.txt` 
+
 Run the following command to initialize the database and create the tables:
 `python3 backend_manage.py initdb`
 
