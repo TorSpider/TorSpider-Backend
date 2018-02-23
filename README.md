@@ -4,7 +4,7 @@ The database backend with which the spiders share their discoveries.
 The database is a PostgreSQL database exposed via a Flask API.  
 
 
-## Usage
+## Installation
 The backend is responsible for the database and exposing the API.
 
 Update your app/config.py file with the PostgreSQL DB settings and ensure the database is created.
@@ -18,8 +18,18 @@ Run the following command to initialize the database and create the tables:
 Run the following command to seed the database:
 `python3 backend_manage.py seed`
 
+If you'd like to install the backend as a service:
+Please note, we assume torspider is installed as the torpsider user in /home/torspider.
+1. Run `sudo cp init/torspider-backend.service /etc/systemd/system/` 
+2. Run `sudo systemctl daemon-reload`
+3. Run `sudo systemctl enable torspider-backend`
+
+## Running the Backend
 Let's get started:
 `ptyhon3 backend_manage.py run`
+
+Run it as a service:
+`systemctl start torspider-backend`
 
 You are now running your API, exposed on http://your_ip:1080
 
