@@ -27,7 +27,7 @@ class Onions(db.Model, CreatedUpdatedMixin):
     __tablename__ = "onions"
 
     id = db.Column(db.Integer, primary_key=True, nullable=False, unique=True, index=True)
-    domain = db.Column(db.String, unique=True, nullable=False)
+    domain = db.Column(db.String, unique=True, nullable=False, index=True)
     online = db.Column(db.Boolean, default=True)
     last_online = db.Column(db.Date, default=datetime.date(1900, 1, 1))
     scan_date = db.Column(db.Date, default=datetime.date(1900, 1, 1))
