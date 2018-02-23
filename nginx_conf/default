@@ -36,10 +36,21 @@ server {
         server_name _;
 
         location ~ ^/api {  
+            try_files $uri @backend;
+        }
+        location ~ ^/swagger {  
+            try_files $uri @backend;
+        }        
+        location / { 
+            try_files $uri @frontend;
+        }
+        
+        location @backend {
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_pass http://127.0.0.1:1080;
         }
-        location / { 
+        
+        location @frontend {
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_pass http://127.0.0.1:1081;
         }

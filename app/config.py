@@ -20,6 +20,6 @@ class ProductionConf(object):
     # Debugging stuff
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    DEBUG = True
+    DEBUG = False
     LISTEN_PORT = 1080
 

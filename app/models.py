@@ -1,5 +1,7 @@
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.inspection import inspect
+
 import datetime
 
 Base = declarative_base()
@@ -7,12 +9,24 @@ Base = declarative_base()
 from app import db
 
 
+class SerializerMixin:
+    """Provide dict-like interface to db.Model subclasses."""
+
+    def __getitem__(self, key):
+        """Expose object attributes like dict values."""
+        return getattr(self, key)
+
+    def keys(self):
+        """Identify what db columns we have."""
+        return inspect(self).attrs.keys()
+
+
 class CreatedUpdatedMixin(object):
     created = db.Column(db.DateTime, server_default=db.func.now(), index=True)
     updated = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), index=True)
 
 
-class Onions(db.Model, CreatedUpdatedMixin):
+class Onions(db.Model, CreatedUpdatedMixin, SerializerMixin):
     '''
     Onions: Information about each individual onion domain.
          - id:            The numerical ID of that domain.
@@ -36,7 +50,7 @@ class Onions(db.Model, CreatedUpdatedMixin):
     offline_scans = db.Column(db.Integer, default=0)
 
 
-class Urls(db.Model, CreatedUpdatedMixin):
+class Urls(db.Model, CreatedUpdatedMixin, SerializerMixin):
     ''' Urls: Information about each url discovered.  This is each unique url endpoint, each ?Page=1 param would
         be a different url.
          - id:            The numerical ID of that url.
@@ -59,7 +73,8 @@ class Urls(db.Model, CreatedUpdatedMixin):
     fault = db.Column(db.String)
     __table_args__ = (UniqueConstraint('domain', 'url', name='unique_url'),)
 
-class Pages(db.Model, CreatedUpdatedMixin):
+
+class Pages(db.Model, CreatedUpdatedMixin, SerializerMixin):
     ''' Pages: Information about the various pages in each domain.  This means base pages, in the case of a url with 
         multiple parameters such as Joomla or Wordpress would use.
         - id:            The numerical ID of the page.
@@ -78,7 +93,7 @@ class Pages(db.Model, CreatedUpdatedMixin):
     __table_args__ = (UniqueConstraint('domain', 'url', name='unique_page'),)
 
 
-class Forms(db.Model, CreatedUpdatedMixin):
+class Forms(db.Model, CreatedUpdatedMixin, SerializerMixin):
     ''' Forms: Information about the various form fields for each page.
         - id:            The numerical ID of the form field.
         - page:          The numerical ID of the page it links to.
@@ -94,7 +109,7 @@ class Forms(db.Model, CreatedUpdatedMixin):
     __table_args__ = (UniqueConstraint('page', 'field', name='unique_field'),)
 
 
-class Links(db.Model, CreatedUpdatedMixin):
+class Links(db.Model, CreatedUpdatedMixin, SerializerMixin):
     ''' Links: Information about which domains connect to each other.
         - domain_from:        The numerical ID of the origin domain.
         - domain_to:          The numerical ID of the target domain.
