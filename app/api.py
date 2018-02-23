@@ -21,21 +21,26 @@ def authenticated_preprocessor(search_params=None, **kwargs):
 
 # Endpoints available at /api/<table_name>
 manager.create_api(Onions, methods=['POST', 'GET', 'PUT', 'PATCH'], results_per_page=0,
+                   allow_patch_many=True, allow_functions=True,
                    preprocessors=dict(GET_SINGLE=[authenticated_preprocessor],
                                       GET_MANY=[authenticated_preprocessor]))
 
 manager.create_api(Urls, methods=['POST', 'GET', 'PUT', 'PATCH'], results_per_page=0,
+                   allow_patch_many=True, allow_functions=True,
                    preprocessors=dict(GET_SINGLE=[authenticated_preprocessor],
                                       GET_MANY=[authenticated_preprocessor]))
 
 manager.create_api(Pages, methods=['POST', 'GET', 'PUT', 'PATCH'], results_per_page=0,
+                   allow_patch_many=True, allow_functions=True,
                    preprocessors=dict(GET_SINGLE=[authenticated_preprocessor],
                                       GET_MANY=[authenticated_preprocessor]))
 
 manager.create_api(Forms, methods=['POST', 'GET', 'PUT', 'PATCH'], results_per_page=0,
+                   allow_patch_many=True, allow_functions=True,
                    preprocessors=dict(GET_SINGLE=[authenticated_preprocessor],
                                       GET_MANY=[authenticated_preprocessor]))
 
 manager.create_api(Links, methods=['POST', 'GET', 'PUT', 'PATCH'], results_per_page=0,
+                   allow_patch_many=True, allow_functions=True,
                    preprocessors=dict(GET_SINGLE=[authenticated_preprocessor],
                                       GET_MANY=[authenticated_preprocessor]))

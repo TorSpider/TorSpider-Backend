@@ -32,4 +32,3 @@ Copy the provided nginx config file to /etc/nginx/sites-available:
 
 Restart Nginx:
 `service nginx restart`
-
