@@ -1,0 +1,11 @@
+[Unit]
+Description=torspider-backend
+
+[Service]
+User=torspider
+WorkingDirectory=/home/torspider/TorSpider-Backend
+ExecStart=/bin/bash -c '/usr/bin/python3 /home/torspider/TorSpider-Backend/backend_manage.py run 2>&1'
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
