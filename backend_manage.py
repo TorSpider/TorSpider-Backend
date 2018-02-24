@@ -40,6 +40,7 @@ def run():
     log.setLevel(app.config['LOG_LEVEL'])
     log.addHandler(handler)
     app.logger.addHandler(handler)
+    app.logger.setLevel(app.config['APP_LOG_LEVEL'])
     port = int(environ.get('PORT', app.config['LISTEN_PORT']))
     addr = environ.get('LISTEN_ADDR', app.config['LISTEN_ADDR'])
     if app.config['USETLS']:
