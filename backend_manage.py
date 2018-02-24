@@ -8,6 +8,7 @@ from flask_migrate import Migrate, MigrateCommand
 from app import app
 from app.models import *
 import logging
+import configparser
 from logging.handlers import TimedRotatingFileHandler
 
 script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -25,10 +26,13 @@ manager.add_command('db', MigrateCommand)
 
 @manager.command
 def run():
+    '''
+    Start the server. 
+    '''
     if not os.path.isdir(os.path.join(script_dir, 'logs')):
         os.makedirs(os.path.join(script_dir, 'logs'))
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    handler = TimedRotatingFileHandler(os.path.join(script_dir, 'logs', 'TorSpider.log'), when='midnight', interval=1)
+    handler = TimedRotatingFileHandler(os.path.join(script_dir, 'logs', 'TorSpider-Backend.log'), when='midnight', interval=1)
     handler.setLevel(app.config['LOG_LEVEL'])
     handler.setFormatter(formatter)
     log = logging.getLogger('werkzeug')
@@ -36,15 +40,19 @@ def run():
     log.addHandler(handler)
     app.logger.addHandler(handler)
     port = int(environ.get('PORT', app.config['LISTEN_PORT']))
+    addr = environ.get('LISTEN_ADDR', app.config['LISTEN_ADDR'])
     if app.config['USETLS']:
         context = (os.path.join(script_dir, 'certs', 'server.crt'), os.path.join(script_dir, 'certs', 'server.key'))
-        app.run(host='0.0.0.0', port=port, threaded=True, ssl_context=context)
+        app.run(host=addr, port=port, threaded=True, ssl_context=context)
     else:
-        app.run(host='0.0.0.0', port=port, threaded=True)
+        app.run(host=addr, port=port, threaded=True)
 
 
 @manager.command
 def initdb():
+    '''
+    Initialize the database and create all tables.
+    '''
     print("[+] Initializing database...")
     print("[+] Creating tables...")
     db.create_all(bind=None)
@@ -52,7 +60,51 @@ def initdb():
 
 
 @manager.command
+def make_config():
+    '''
+    Create the initial config file. 
+    '''
+    if not os.path.exists(os.path.join(script_dir, 'backend.cfg')):
+        # If we don't yet have a configuration file, make one and tell the
+        # user to set it up before continuing.
+        default_config = configparser.RawConfigParser()
+        default_config.optionxform = lambda option: option
+        default_config['Database'] = {
+            'user': 'torspider',
+            'password': 'password',
+            'host': '127.0.0.1',
+            'database': 'TorSpider'
+        }
+        default_config['Flask'] = {
+            'SECRET_KEY': 'please-change-me',
+            'USETLS': False,
+            'DEBUG': False,
+            'LISTEN_PORT': 1080,
+            'LISTENING_ADDR': '0.0.0.0'
+        }
+        default_config['SQLAlchemy'] = {
+            'SQLALCHEMY_ECHO': False,
+            'SQLALCHEMY_TRACK_MODIFICATIONS': False
+        }
+        default_config['WTForms'] = {
+            'WTF_CSRF_ENABLED': True,
+            'WTF_CSRF_SECRET_KEY': 'please-change-me'
+        }
+        default_config['LOGGING'] = {
+            'loglevel': 'INFO'
+        }
+        with open(os.path.join(script_dir, 'backend.cfg'), 'w') as config_file:
+            default_config.write(config_file)
+        print('Default configuration stored in backend.cfg.')
+        print('Please edit backend.cfg before running TorSpider backend.')
+    else:
+        print('The backend.cfg file already exists.  Please delete it to create a fresh one.')
+
+@manager.command
 def seed():
+    '''
+    Seed the database with the initial data required.
+    '''
     # We'll populate the database with some default values. These
     # pages are darknet indexes, so they should be a good starting
     # point.
