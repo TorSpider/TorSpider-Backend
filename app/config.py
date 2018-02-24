@@ -35,7 +35,8 @@ def read_config():
                 'WTF_CSRF_SECRET_KEY': config['WTForms'].get('WTF_CSRF_SECRET_KEY')
             }
             my_config['LOGGING'] = {
-                'loglevel': logging.getLevelName(config['LOGGING'].get('loglevel'))
+                'loglevel': logging.getLevelName(config['LOGGING'].get('loglevel')),
+                'apploglevel': logging.getLevelName(config['LOGGING'].get('apploglevel'))
             }
             return my_config
         except Exception as e:
@@ -75,7 +76,8 @@ def make_config():
             'WTF_CSRF_SECRET_KEY': 'please-change-me'
         }
         default_config['LOGGING'] = {
-            'loglevel': 'INFO'
+            'loglevel': 'INFO',
+            'apploglevel': 'CRITICAL'
         }
         with open(os.path.join(script_dir, 'backend.cfg'), 'w') as config_file:
             default_config.write(config_file)
@@ -93,6 +95,7 @@ class ProductionConf(object):
         make_config()
         server_config = read_config()
     LOG_LEVEL = server_config['LOGGING'].get('loglevel')
+    APP_LOG_LEVEL = server_config['LOGGING'].get('apploglevel')
     SQLALCHEMY_DATABASE_URI = "postgresql://{}:{}@{}:5432/{}".format(server_config['Database'].get('user'),
                                                                      server_config['Database'].get('password'),
                                                                      server_config['Database'].get('host'),
