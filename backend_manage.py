@@ -8,7 +8,6 @@ from flask_migrate import Migrate, MigrateCommand
 from app import app
 from app.models import *
 import logging
-import configparser
 from logging.handlers import TimedRotatingFileHandler
 
 script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
