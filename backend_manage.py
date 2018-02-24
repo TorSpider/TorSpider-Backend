@@ -32,7 +32,8 @@ def run():
     if not os.path.isdir(os.path.join(script_dir, 'logs')):
         os.makedirs(os.path.join(script_dir, 'logs'))
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    handler = TimedRotatingFileHandler(os.path.join(script_dir, 'logs', 'TorSpider-Backend.log'), when='midnight', interval=1)
+    handler = TimedRotatingFileHandler(os.path.join(script_dir, 'logs', 'TorSpider-Backend.log'), when='midnight',
+                                       interval=1)
     handler.setLevel(app.config['LOG_LEVEL'])
     handler.setFormatter(formatter)
     log = logging.getLogger('werkzeug')
@@ -58,47 +59,6 @@ def initdb():
     db.create_all(bind=None)
     print('[+] Done!')
 
-
-@manager.command
-def make_config():
-    '''
-    Create the initial config file. 
-    '''
-    if not os.path.exists(os.path.join(script_dir, 'backend.cfg')):
-        # If we don't yet have a configuration file, make one and tell the
-        # user to set it up before continuing.
-        default_config = configparser.RawConfigParser()
-        default_config.optionxform = lambda option: option
-        default_config['Database'] = {
-            'user': 'torspider',
-            'password': 'password',
-            'host': '127.0.0.1',
-            'database': 'TorSpider'
-        }
-        default_config['Flask'] = {
-            'SECRET_KEY': 'please-change-me',
-            'USETLS': False,
-            'DEBUG': False,
-            'LISTEN_PORT': 1080,
-            'LISTENING_ADDR': '0.0.0.0'
-        }
-        default_config['SQLAlchemy'] = {
-            'SQLALCHEMY_ECHO': False,
-            'SQLALCHEMY_TRACK_MODIFICATIONS': False
-        }
-        default_config['WTForms'] = {
-            'WTF_CSRF_ENABLED': True,
-            'WTF_CSRF_SECRET_KEY': 'please-change-me'
-        }
-        default_config['LOGGING'] = {
-            'loglevel': 'INFO'
-        }
-        with open(os.path.join(script_dir, 'backend.cfg'), 'w') as config_file:
-            default_config.write(config_file)
-        print('Default configuration stored in backend.cfg.')
-        print('Please edit backend.cfg before running TorSpider backend.')
-    else:
-        print('The backend.cfg file already exists.  Please delete it to create a fresh one.')
 
 @manager.command
 def seed():
