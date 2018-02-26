@@ -102,3 +102,6 @@ ENV/
 
 #Pycharm
 .idea
+
+# Backend Configuration File
+backend.cfg
