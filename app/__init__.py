@@ -16,12 +16,14 @@ app.config.from_object(config_path)
 
 db = SQLAlchemy(app)
 
+
 class MyJSONEncoder(JSONEncoder):
     def default(self, obj):
         # Optional: convert datetime objects to ISO format
         with suppress(AttributeError):
             return obj.isoformat()
         return dict(obj)
+
 
 app.json_encoder = MyJSONEncoder
 

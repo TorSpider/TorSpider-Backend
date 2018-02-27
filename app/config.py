@@ -2,6 +2,7 @@ import sys
 import os
 import logging
 import configparser
+import uuid 
 
 script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
 
@@ -58,14 +59,14 @@ def make_config():
             'user': 'torspider',
             'password': 'password',
             'host': '127.0.0.1',
-            'database': 'TorSpider'
+            'database': 'TorSpider-Backend'
         }
         default_config['Flask'] = {
-            'SECRET_KEY': 'please-change-me',
-            'USETLS': False,
+            'SECRET_KEY': uuid.uuid4(),
+            'USETLS': True,
             'DEBUG': False,
             'LISTEN_PORT': 1080,
-            'LISTENING_ADDR': '0.0.0.0'
+            'LISTENING_ADDR': '127.0.0.1'
         }
         default_config['SQLAlchemy'] = {
             'SQLALCHEMY_ECHO': False,
@@ -73,7 +74,7 @@ def make_config():
         }
         default_config['WTForms'] = {
             'WTF_CSRF_ENABLED': True,
-            'WTF_CSRF_SECRET_KEY': 'please-change-me'
+            'WTF_CSRF_SECRET_KEY': uuid.uuid4()
         }
         default_config['LOGGING'] = {
             'loglevel': 'INFO',

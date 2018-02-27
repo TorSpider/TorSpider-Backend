@@ -1,10 +1,10 @@
+sqlalchemy
 flask
 flask_script
 flask_migrate
 flask_sqlalchemy
 flask_restless
 flask-restless-swagger
-flask_login
-psycopg2
+psycopg2-binary
 PyYAML>=3.11
 wheel>=0.22

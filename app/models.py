@@ -120,3 +120,13 @@ class Links(db.Model, CreatedUpdatedMixin, SerializerMixin):
     domain_from = db.Column(db.String, db.ForeignKey('onions.domain', ondelete='cascade'))
     domain_to = db.Column(db.String, db.ForeignKey('onions.domain', ondelete='cascade'))
     __table_args__ = (UniqueConstraint('domain_from', 'domain_to', name='unique_link'),)
+
+
+class Nodes(db.Model, CreatedUpdatedMixin, SerializerMixin):
+    __tablename__ = "nodes"
+
+    id = db.Column(db.Integer, primary_key=True, nullable=False, unique=True)
+    unique_id = db.Column(db.String(32), nullable=False, unique=True)
+    api_key = db.Column(db.String(40), nullable=True, unique=True)
+    owner = db.Column(db.String(32), nullable=False)
+    active = db.Column(db.Boolean, default=True)
