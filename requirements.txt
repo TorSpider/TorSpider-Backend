@@ -5,6 +5,6 @@ flask_migrate
 flask_sqlalchemy
 flask_restless
 flask-restless-swagger
-psycopg2
+psycopg2-binary
 PyYAML>=3.11
 wheel>=0.22
