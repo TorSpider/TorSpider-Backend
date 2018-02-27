@@ -65,7 +65,7 @@ def make_config():
             'USETLS': False,
             'DEBUG': False,
             'LISTEN_PORT': 1080,
-            'LISTENING_ADDR': '0.0.0.0'
+            'LISTENING_ADDR': '127.0.0.1'
         }
         default_config['SQLAlchemy'] = {
             'SQLALCHEMY_ECHO': False,
