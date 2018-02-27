@@ -33,7 +33,7 @@ def create_api_key():
     return hashlib.sha1(uuid.uuid4().hex.encode('utf-8')).hexdigest()
 
 
-def create_unqiue_id():
+def create_unique_id():
     """
     Create a unique ID that is used by the nodes
     :return: A unqiue 16 character ID.
@@ -90,7 +90,7 @@ def create_frontend_node():
     newnode = Nodes()
     newnode.owner = 'FrontEnd'
     newnode.api_key = create_api_key()
-    newnode.unique_id = create_unqiue_id()
+    newnode.unique_id = create_unique_id()
     newnode.active = True
     check_dup = True
     # Keep trying to create unique keys until they don't exist in the db.  This should really only run once.
