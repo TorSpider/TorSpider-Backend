@@ -50,7 +50,7 @@ def run():
         os.makedirs(os.path.join(script_dir, 'logs'))
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     handler = TimedRotatingFileHandler(os.path.join(script_dir, 'logs', 'TorSpider-Backend.log'), when='midnight',
-                                       interval=1)
+                                       backupCount=7, interval=1)
     handler.setLevel(app.config['LOG_LEVEL'])
     handler.setFormatter(formatter)
     log = logging.getLogger('werkzeug')
