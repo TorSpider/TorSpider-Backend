@@ -1,9 +1,9 @@
 from app.models import Onions, Links, Pages
-from flask.login import login_required
+from app.helpers import check_api_auth
 from sqlalchemy import desc
 from flask import jsonify
-from flask import request
-from app import db
+from flask import abort
+from app import app, db
 
 """
 Page Count:
@@ -17,9 +17,16 @@ GROUP BY onions.domain
 ORDER BY COUNT(pages.url) DESC LIMIT 20;
 """
 
+
+@app.route("/api/top20", methods=["GET"])
+def top_twenty():
+    abort(404)
+
+
 @app.route("/api/top20/pages", methods=["GET"])
-# @login_required
 def top_twenty_page_count():
+    if not check_api_auth():
+        abort(401)
     # Retrieve the top twenty onions in order of page count.
     query = db.session.query(
         Onions.domain,
@@ -57,9 +64,11 @@ GROUP BY onions.domain ORDER BY COUNT(links.domain_to) DESC
 LIMIT 20;
 """
 
+
 @app.route("/api/top20/outlinks", methods=["GET"])
-# @login_required
 def top_twenty_outlinks():
+    if not check_api_auth():
+        abort(401)
     # Retrieve the top twenty onions in order of outgoing links.
     query = db.session.query(
         Onions.domain,
@@ -85,6 +94,7 @@ def top_twenty_outlinks():
         return jsonify({'object': {}})
     return jsonify({'objects': results})
 
+
 """
 Incoming Links:
 SELECT DISTINCT onions.domain, count(links.domain_from)
@@ -101,9 +111,11 @@ GROUP BY onions.domain ORDER BY COUNT(links.domain_from) DESC
 LIMIT 20;
 """
 
+
 @app.route("/api/top20/inlinks", methods=["GET"])
-# @login_required
 def top_twenty_inlinks():
+    if not check_api_auth():
+        abort(401)
     # Retrieve the top twenty onions in order of incoming links.
     query = db.session.query(
         Onions.domain,

@@ -1,9 +1,9 @@
-from flask import render_template, abort
-from flask_login import login_required
 from sqlalchemy import and_, or_
 from flask import jsonify
 from flask import request
+from flask import abort
 from app import app
+from app.helpers import check_api_auth
 from app.models import Urls, Onions
 from datetime import date, timedelta
 import random
@@ -11,10 +11,11 @@ import json
 
 
 @app.route("/api/next", methods=["GET"])
-# @login_required
 def next_url():
     # TODO find a better serializer function
     # We get the node name from the get param, otherwise leave it blank
+    if not check_api_auth:
+        abort(401)
     try:
         node_name = json.loads(request.args.get('q'))['node_name']
     except:
