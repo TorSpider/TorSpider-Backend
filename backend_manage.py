@@ -61,7 +61,7 @@ def run():
     port = int(environ.get('PORT', app.config['LISTEN_PORT']))
     addr = environ.get('LISTEN_ADDR', app.config['LISTEN_ADDR'])
     if app.config['USETLS']:
-        context = (os.path.join(script_dir, 'certs', 'server.crt'), os.path.join(script_dir, 'certs', 'server.key'))
+        context = ('/etc/nginx/certs/torspider/cert.crt', '/etc/nginx/certs/torspider/cert.key')
         app.run(host=addr, port=port, threaded=True, ssl_context=context)
     else:
         app.run(host=addr, port=port, threaded=True)
