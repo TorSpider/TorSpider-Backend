@@ -41,7 +41,9 @@ def next_url():
         db.func.random()
     ).limit(1).all()
     if len(candidates) is 0:
+        print("NO RESULTS TO NEW URL")
         return jsonify({'object': {}})
+    print(candidates)
     candidate = dict(candidates[0])
     candidate['domain_info'] = dict(candidate['domain_info'])
     candidate['domain_info']['urls'] = None
