@@ -44,7 +44,7 @@ def create_unique_id():
 @manager.command
 def run():
     """
-    Start the server. 
+    Start the server.
     """
     if not os.path.isdir(os.path.join(script_dir, 'logs')):
         os.makedirs(os.path.join(script_dir, 'logs'))

@@ -9,6 +9,8 @@ The backend requires Python 3 and pip to begin with.
 ## Installation
 The backend is responsible for managing the database and exposing the API.
 
+### First Steps
+
 Update your backend.cfg file with the PostgreSQL DB settings and ensure the database and user are created.
 
 Ensure you have installed the requirements:
@@ -19,6 +21,17 @@ Run the following command to initialize the database and create the tables:
 
 Run the following command to seed the database:
 `python3 backend_manage.py seed`
+
+### SSL Certificates
+
+In order to encrypt communication with the backend API, you'll need SSL certificates. You can obtain these from a number of sources, or generate your own. Once you've got them, you'll need to save them in the `/etc/nginx/certs/torspider/` folder. You should have the following two files:
+
+`/etc/nginx/certs/torspider/cert.crt`
+`/etc/nginx/certs/torspider/cert.key`
+
+Once those certificates are in place, you should be able to run the backend.
+
+### Installing the Backend as a Service
 
 If you'd like to install the backend as a service:
 Please note, we assume torspider is installed as the torpsider user in /home/torspider.
