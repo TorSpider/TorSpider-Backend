@@ -23,11 +23,23 @@ def next_url():
     week_ago = (date.today() - timedelta(days=7))
     day_ago = (date.today() - timedelta(days=1))
     candidates = Urls.query.join(Onions).filter(
-        or_(and_(Urls.fault == None, Urls.date < week_ago),
-            and_(Onions.online == True, Onions.tries != 0, Onions.last_node != node_name),
-            and_(Onions.online == False, Onions.scan_date < day_ago, Onions.last_node != node_name))).order_by(
-                db.func.random()
-            ).limit(1).all()
+        or_(
+            and_(
+                Urls.fault == None,
+                Urls.date < week_ago
+            ),and_(
+                Onions.online == True,
+                Onions.tries != 0,
+                Onions.last_node != node_name
+            ),and_(
+                Onions.online == False,
+                Onions.scan_date < day_ago,
+                Onions.last_node != node_name
+            )
+        )
+    ).order_by(
+        db.func.random()
+    ).limit(1).all()
     if len(candidates) is 0:
         return jsonify({'object': {}})
     candidate = dict(candidates[0])
