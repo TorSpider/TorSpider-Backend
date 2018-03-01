@@ -6,7 +6,6 @@ from app import app
 from app.helpers import check_api_auth
 from app.models import Urls, Onions
 from datetime import date, timedelta
-import random
 import json
 
 
@@ -41,9 +40,7 @@ def next_url():
         db.func.random()
     ).limit(1).all()
     if len(candidates) is 0:
-        print("NO RESULTS TO NEW URL")
         return jsonify({'object': {}})
-    print(candidates)
     candidate = dict(candidates[0])
     candidate['domain_info'] = dict(candidate['domain_info'])
     candidate['domain_info']['urls'] = None
