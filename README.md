@@ -39,6 +39,16 @@ Please note, we assume torspider is installed as the torpsider user in /home/tor
 2. Run `sudo systemctl daemon-reload`
 3. Run `sudo systemctl enable torspider-backend`
 
+### Generating Frontend API Keys
+
+Before the frontend can connect and manage the backend, you'll need to generate a node ID and keys for the frontend. To do this, run:
+
+```
+python3 backend_manage.py create_frontend_node
+```
+
+The script will produce the necessary credentials for you. Be sure to write them down!
+
 ## Running the Backend
 Let's get started:
 `ptyhon3 backend_manage.py run`
