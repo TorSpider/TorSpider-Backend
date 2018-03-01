@@ -31,6 +31,8 @@ In order to encrypt communication with the backend API, you'll need SSL certific
 
 Once those certificates are in place, you should be able to run the backend.
 
+**Note:** These certificates are the same certificates as the ones used in the frontend installation.
+
 ### Installing the Backend as a Service
 
 If you'd like to install the backend as a service:
@@ -62,8 +64,17 @@ You are now running your API, exposed on http://your_ip:1080
 Nginx is used to expose both the frontend (1081) and backend (1080) websites on one port (80) to regular users.
 Ensure your have Nginx installed: `apt-get install nginx`
 
-Copy the provided nginx config file to /etc/nginx/sites-available:
-`cp nginx_conf/default /etc/nginx/sites-available`
+Copy one of the provided nginx config files to /etc/nginx/sites-available.
 
-Restart Nginx:
+If you are installing the backend on a separate system from the frontend, copy the backend configuration as follows:
+
+`cp nginx_conf/backend /etc/nginx/sites-available/default`
+
+However, if you are running both the backend and frontend on the same system, copy the combined configuration as follows:
+
+`cp nginx_conf/combined /etc/nginx/sites-available/default`
+
+After copying the appropriate configuration file, restart Nginx:
 `service nginx restart`
+
+Once this is complete, you should be able to access the backend from http://your_ip/api/.
