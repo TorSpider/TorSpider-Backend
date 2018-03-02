@@ -11,10 +11,17 @@ The backend is responsible for managing the database and exposing the API.
 
 ### First Steps
 
-Update your backend.cfg file with the PostgreSQL DB settings and ensure the database and user are created.
-
-Ensure you have installed the requirements:
+First, ensure you have installed the requirements:
 `pip3 install -r requirements.txt`
+
+Next, run the backend_manage.py script once to generate the backend.cfg file:
+```
+$ python backend_manage.py
+[+] Default configuration stored in backend.cfg.
+[+] Please edit backend.cfg before running TorSpider backend.
+```
+
+Update your backend.cfg file with the PostgreSQL DB settings and ensure the database and user are created.
 
 Next, you'll need to initialize the frontend database and seed it with values:
 ```
