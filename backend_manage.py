@@ -44,13 +44,19 @@ def create_unique_id():
 @manager.command
 def run():
     """
-    Start the server. 
+    Start the server.
     """
+
+    # Set up the logger.
     if not os.path.isdir(os.path.join(script_dir, 'logs')):
         os.makedirs(os.path.join(script_dir, 'logs'))
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    handler = TimedRotatingFileHandler(os.path.join(script_dir, 'logs', 'TorSpider-Backend.log'), when='midnight',
-                                       backupCount=7, interval=1)
+    # Format the logs.
+    formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    # Enable the logs to split files at midnight.
+    handler = TimedRotatingFileHandler(
+            os.path.join(script_dir, 'logs', 'TorSpider-Backend.log'),
+            when='midnight', backupCount=7, interval=1)
     handler.setLevel(app.config['LOG_LEVEL'])
     handler.setFormatter(formatter)
     log = logging.getLogger('werkzeug')
@@ -58,10 +64,13 @@ def run():
     log.addHandler(handler)
     app.logger.addHandler(handler)
     app.logger.setLevel(app.config['APP_LOG_LEVEL'])
+
+    # Set up the app server, port, and configuration.
     port = int(environ.get('PORT', app.config['LISTEN_PORT']))
     addr = environ.get('LISTEN_ADDR', app.config['LISTEN_ADDR'])
     if app.config['USETLS']:
-        context = ('/etc/nginx/certs/torspider/cert.crt', '/etc/nginx/certs/torspider/cert.key')
+        context = ('/etc/nginx/certs/torspider/cert.crt',
+                   '/etc/nginx/certs/torspider/cert.key')
         app.run(host=addr, port=port, threaded=True, ssl_context=context)
     else:
         app.run(host=addr, port=port, threaded=True)
@@ -174,6 +183,7 @@ def seed():
 
 @manager.command
 def list_routes():
+    # List all Flask routes between objects and urls.
     import urllib.parse
     from flask import url_for
     output = []
