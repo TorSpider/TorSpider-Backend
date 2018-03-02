@@ -16,11 +16,11 @@ Update your backend.cfg file with the PostgreSQL DB settings and ensure the data
 Ensure you have installed the requirements:
 `pip3 install -r requirements.txt`
 
-Run the following command to initialize the database and create the tables:
-`python3 backend_manage.py initdb`
-
-Run the following command to seed the database:
-`python3 backend_manage.py seed`
+Next, you'll need to initialize the frontend database and seed it with values:
+```
+python3 backend_manage.py initdb
+python3 backend_manage.py seed
+```
 
 ### SSL Certificates
 
