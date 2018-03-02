@@ -2,11 +2,10 @@ from sqlalchemy import and_, or_
 from flask import jsonify
 from flask import request
 from flask import abort
-from app import app
+from app import app, db
 from app.helpers import check_api_auth
 from app.models import Urls, Onions
 from datetime import date, timedelta
-import random
 import json
 
 
