@@ -34,8 +34,8 @@ server {
         add_header X-Xss-Protection "1; mode=block" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header Referrer-Policy "no-referrer-when-downgrade";
-        ssl_certificate     /etc/nginx/certs/torspider/cert.crt;
-        ssl_certificate_key /etc/nginx/certs/torspider/cert.key;
+        ssl_certificate     /etc/nginx/certs/torspider/backend.pem;
+        ssl_certificate_key /etc/nginx/certs/torspider/backend-key.pem;
 
         location ~ ^/api {
             try_files $uri @backend;
