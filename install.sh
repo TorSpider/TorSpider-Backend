@@ -1,5 +1,9 @@
 #! /bin/bash
 # A script to install the backend
+if ! type strings > /dev/null; then
+  echo "[-] You need to install strings.  Run sudo apt-get install -y binutils"
+  exit 1
+fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 backend_user=$(who am i | awk '{print $1}')
@@ -13,13 +17,6 @@ check_root() {
        echo "[+] Run: sudo bash install.sh" 
        exit 1
     fi
-}
-
-check_for_string() {
-if ! type "$foobar_command_name" > /dev/null; then
-  echo "[-] You need to install strings.  Run sudo apt-get install -y binutils"
-fi
-
 }
 
 check_user() {
