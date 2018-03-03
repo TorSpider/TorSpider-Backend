@@ -129,11 +129,11 @@ Remember to restart postgres after you add them.
 
 ## Running the Backend
 Let's get started:
-`ptyhon3 backend_manage.py run`
+`python3 backend_manage.py run`
 
 Run it as a service:
 `systemctl start torspider-backend`
 
 You are now running your API, exposed on http://your_ip/api/onions
 
-**Note**: You should get unauthorized on a regular get, since you didn't pass your api keys. 
+**Note**: You should receive `unauthorized` on a regular GET request, since you didn't pass your api keys. 
