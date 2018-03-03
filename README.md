@@ -129,7 +129,7 @@ Remember to restart postgres after you add them.
 
 ## Running the Backend
 Let's get started:
-`ptyhon3 backend_manage.py run`
+`python3 backend_manage.py run`
 
 Run it as a service:
 `systemctl start torspider-backend`
