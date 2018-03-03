@@ -107,6 +107,7 @@ create_selfsigned() {
                             echo "[+] Copying backend Nginx config files."
                             cp $DIR/nginx_conf/backend /etc/nginx/sites-available/backend
                             ln -s /etc/nginx/sites-available/backend /etc/nginx/sites-enabled/backend
+                            systemctl restart nginx
                         ;;
                     esac
                 self_signed=0            
