@@ -3,8 +3,8 @@ Description=torspider-backend
 
 [Service]
 User=torspider
-WorkingDirectory=/home/torspider/TorSpider-Backend
-ExecStart=/bin/bash -c '/usr/bin/python3 /home/torspider/TorSpider-Backend/backend_manage.py run > /dev/null 2>&1'
+WorkingDirectory=REPLACE_THE_PATH
+ExecStart=/bin/bash -c '/usr/bin/python3 REPLACE_THE_PATH/backend_manage.py run > /dev/null 2>&1'
 Restart=always
 
 [Install]
