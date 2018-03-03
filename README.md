@@ -99,6 +99,14 @@ Update your backend.cfg file with the PostgreSQL DB settings that were provided 
 
 If for some reason you want to run the site without SSL, ensure you set the USETLS setting to False.
 
+**Important:** If you are using Let's Encrypt, set the configuration parameters for your certificate files to the location of the Let's Encrypt store.
+
+Typically:
+```
+CERT_FILE = /etc/letsencrypt/live/domain_name/fullchain.pem
+CERT_KEY_FILE = /etc/letsencrypt/live/domain_name/privkey.pem
+```
+
 ### Populate the Database 
 
 Next, you'll need to initialize the frontend database and seed it with values:
