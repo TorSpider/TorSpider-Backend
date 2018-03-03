@@ -130,6 +130,7 @@ install_service() {
             * )
                 echo "[+] Registering service."
                 sed -i "s#REPLACE_THE_PATH#$DIR#g" $DIR/init/torspider-backend.service
+                sed -i "s#REPLACE_THE_USER#$backend_user#g" $DIR/init/torspider-backend.service
                 cp $DIR/init/torspider-backend.service /etc/systemd/system/
                 systemctl daemon-reload
                 echo "[+] Enabling service."
