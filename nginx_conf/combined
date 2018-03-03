@@ -28,11 +28,9 @@ server {
 
         server_name _;
 
-        ssl_certificate     /etc/nginx/certs/torspider/cert.crt;
-        ssl_certificate_key /etc/nginx/certs/torspider/cert.key;
-
-        server_name _;
-
+        ssl_certificate     /etc/nginx/certs/torspider/backend.pem;
+        ssl_certificate_key /etc/nginx/certs/torspider/backend-key.pem;
+        
         location ~ ^/api {
             try_files $uri @backend;
         }
