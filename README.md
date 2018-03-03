@@ -131,4 +131,3 @@ Run it as a service:
 You are now running your API, exposed on http://your_ip/api/onions
 
 **Note**: You should get unauthorized on a regular get, since you didn't pass your api keys. 
-
