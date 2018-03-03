@@ -15,7 +15,7 @@ Run the installation script to install and configure the required software.
 The installer will run you through a set of questions to configure your instance.
 
 ```
-$ sudo ./install.sh
+$ sudo bash install.sh
 === TorSpider Backend Installer ===
 This installed will walk you through the installation process.
 <snip>
