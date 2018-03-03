@@ -15,6 +15,13 @@ check_root() {
     fi
 }
 
+check_for_string() {
+if ! type "$foobar_command_name" > /dev/null; then
+  echo "[-] You need to install strings.  Run sudo apt-get install -y binutils"
+fi
+
+}
+
 check_user() {
     echo "[+] Directory of TorSpider-Backend: $DIR"
     echo "[+] Installation Username: $backend_user"
@@ -100,6 +107,8 @@ create_selfsigned() {
                             echo "[+] Anything else we do will likely impact an existing site."
                         ;;
                         * )
+                            echo "[+] Stopping nginx..."
+                            systemctl stop nginx
                             echo "[+] Deleting /etc/nginx/sites-available/default"
                             if [  -f /etc/nginx/sites-available/default ]; then
                                 rm /etc/nginx/sites-available/default
