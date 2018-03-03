@@ -91,8 +91,8 @@ create_selfsigned() {
                 openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout /etc/nginx/certs/torspider/backend-key.pem -out /etc/nginx/certs/torspider/backend.pem
                 # Accept Defaults
                 echo "[+] Setting permissions on /etc/nginx/certs/torspider/cert.*"
-                chmod 440 /etc/nginx/certs/torspider/cert.*
-                chown root:$backend_user /etc/nginx/certs/torspider/cert.*
+                chmod 440 /etc/nginx/certs/torspider/backend*
+                chown root:$backend_user /etc/nginx/certs/torspider/backend*
                 read -p "[?] Delete /etc/nginx/sites-available/default? You won't need this unless you have an existing site on this server. (Y/n)? " answer
                     case ${answer:0:1} in
                         n|N )
