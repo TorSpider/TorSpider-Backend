@@ -120,6 +120,13 @@ python3 backend_manage.py create_frontend_node
 
 The script will produce the necessary credentials for you. Be sure to write them down!
 
+
+### Tune PostgreSQL for your server
+PostgreSQL should be tuned based on the number of CPUs and memory available on your system.
+
+Head over to [PgTune](http://pgtune.leopard.in.ua/) to create a custom tuned configuration based on your parameters.
+Remember to restart postgres after you add them.
+
 ## Running the Backend
 Let's get started:
 `ptyhon3 backend_manage.py run`
