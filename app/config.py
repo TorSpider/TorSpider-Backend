@@ -69,8 +69,8 @@ def make_config():
             'DEBUG': False,
             'LISTEN_PORT': 1080,
             'LISTENING_ADDR': '127.0.0.1',
-            'CERT_FILE': 'etc/nginx/certs/torspider/cert.crt',
-            'CERT_KEY_FILE': 'etc/nginx/certs/torspider/cert.key'
+            'CERT_FILE': '/etc/nginx/certs/torspider/cert.crt',
+            'CERT_KEY_FILE': '/etc/nginx/certs/torspider/cert.key'
         }
         default_config['SQLAlchemy'] = {
             'SQLALCHEMY_ECHO': False,
