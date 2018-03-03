@@ -88,7 +88,7 @@ create_selfsigned() {
                 echo "[+] Setting up Nginx with a self-signed certificate."
                 mkdir -p /etc/nginx/certs/torspider
                 echo "[+] Creating self-signed certificate.  Accept defaults or fill-in as you wish."
-                openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout /etc/nginx/certs/torspider/cert.key -out /etc/nginx/certs/torspider/cert.crt
+                openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout /etc/nginx/certs/torspider/backend-key.pem -out /etc/nginx/certs/torspider/backend.pem
                 # Accept Defaults
                 echo "[+] Setting permissions on /etc/nginx/certs/torspider/cert.*"
                 chmod 440 /etc/nginx/certs/torspider/cert.*
@@ -131,6 +131,10 @@ install_service() {
         esac
 }
 
+update_hook() {
+sed -i "s/REPLACE_THE_USER/$backend_user/g" $DIR/letsencrypt/deployhook.sh
+}
+
 
 # Main body
 
@@ -148,6 +152,8 @@ generate_locales
 setup_postgres
 # Clone backend
 get_backend
+# Update letsencrypt hook
+update_hook
 # Self signed cert
 create_selfsigned
 # Install service

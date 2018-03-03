@@ -31,12 +31,10 @@ If you answered yes to installing self-signed certificates, your site is already
 #### Installing Your Own Certificates
 In order to encrypt communication with the backend API, you'll need SSL certificates. You can obtain these from a number of sources, or generate your own. Once you've got them, you'll need to save them in the `/etc/nginx/certs/torspider/` folder. You should have the following two files:
 
-`/etc/nginx/certs/torspider/cert.crt`
-`/etc/nginx/certs/torspider/cert.key`
+`/etc/nginx/certs/torspider/backend.pem`
+`/etc/nginx/certs/torspider/backend-key.pem`
 
 Once those certificates are in place, you should be able to run the backend.
-
-**Note:** These certificates are the same certificates as the ones used in the frontend installation.
 
 #### Using Let's Encrypt Certificates 
 You can use a free certificate service from [Let's Encrypt](https://letsencrypt.org/).  
@@ -71,9 +69,10 @@ systemctl reload nginx
 Configure Let's Encrypt. 
 Let's Encrypt will update your nginx file with the appropriate certificates
 ```
-# Enter each domain listed in your nginx server_name field after -d 
-certbot --nginx -d myspider_backend.com www.myspider_backend.com
+# For each domain enter -d <domain> 
+certbot --nginx --deploy-hook /path/to/TorSpider-Backend/letsencrypt/deployhook.sh -d myspider_backend.com -d www.myspider_backend.com
 ```
+Ensure you replace `/path/to` with the actual path of the TorSpider-Backend.
 
 Enable automatic certificate renewal.  Let's Encrypt certs are only good for a few months.
 ```
@@ -98,14 +97,6 @@ $ python backend_manage.py
 Update your backend.cfg file with the PostgreSQL DB settings that were provided to you during the automated installation.
 
 If for some reason you want to run the site without SSL, ensure you set the USETLS setting to False.
-
-**Important:** If you are using Let's Encrypt, set the configuration parameters for your certificate files to the location of the Let's Encrypt store.
-
-Typically:
-```
-CERT_FILE = /etc/letsencrypt/live/domain_name/fullchain.pem
-CERT_KEY_FILE = /etc/letsencrypt/live/domain_name/privkey.pem
-```
 
 ### Populate the Database 
 
