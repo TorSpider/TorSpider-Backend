@@ -69,8 +69,7 @@ def run():
     port = int(environ.get('PORT', app.config['LISTEN_PORT']))
     addr = environ.get('LISTEN_ADDR', app.config['LISTEN_ADDR'])
     if app.config['USETLS']:
-        context = ('/etc/nginx/certs/torspider/cert.crt',
-                   '/etc/nginx/certs/torspider/cert.key')
+        context = (app.config['CERT_FILE'], app.config['CERT_KEY_FILE'])
         app.run(host=addr, port=port, threaded=True, ssl_context=context)
     else:
         app.run(host=addr, port=port, threaded=True)
@@ -206,3 +205,4 @@ if __name__ == '__main__':
     if sys.version_info[0] < 3:
         raise Exception("Please use Python version 3 to run this script.")
     manager.run()
+

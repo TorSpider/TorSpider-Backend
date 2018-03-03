@@ -11,42 +11,104 @@ The backend is responsible for managing the database and exposing the API.
 
 ### First Steps
 
-First, ensure you have installed the requirements:
-`pip3 install -r requirements.txt`
+Run the installation script to install and configure the required software.
+The installer will run you through a set of questions to configure your instance.
 
-Next, run the backend_manage.py script once to generate the backend.cfg file:
+```
+$ sudo ./install.sh
+=== TorSpider Backend Installer ===
+This installed will walk you through the installation process.
+<snip>
+```
+
+### SSL Certificates
+
+#### Self-Signed Certificates
+If you answered yes to installing self-signed certificates, your site is already set up.
+
+**Warning:** We do not recommend running your site using self-signed certificates except for in testing or development.
+
+#### Installing Your Own Certificates
+In order to encrypt communication with the backend API, you'll need SSL certificates. You can obtain these from a number of sources, or generate your own. Once you've got them, you'll need to save them in the `/etc/nginx/certs/torspider/` folder. You should have the following two files:
+
+`/etc/nginx/certs/torspider/backend.pem`
+`/etc/nginx/certs/torspider/backend-key.pem`
+
+Once those certificates are in place, you should be able to run the backend.
+
+#### Using Let's Encrypt Certificates 
+You can use a free certificate service from [Let's Encrypt](https://letsencrypt.org/).  
+
+Install Let'sEncrypt
+```
+apt-get install -y software-properties-common python-software-properties
+add-apt-repository -y ppa:certbot/certbot
+apt-get update
+apt-get install -y python-certbot-nginx
+```
+
+Update /etc/nginx/sites-available/backend.  You will need to replace any instance of `server_name _;` with `server_name mydomain.com;`
+```
+EXAMPLE!!!!
+<snip>
+server {
+        # SSL configuration
+
+        listen 443 ssl default_server;
+        listen [::]:443 ssl default_server;
+
+        server_name myspider_backend.com www.myspider_backend.com;
+<snip>
+```
+
+Reload Nginx
+```
+systemctl reload nginx
+```
+
+Configure Let's Encrypt. 
+Let's Encrypt will update your nginx file with the appropriate certificates
+```
+# For each domain enter -d <domain> 
+certbot --nginx --deploy-hook /path/to/TorSpider-Backend/letsencrypt/deployhook.sh -d myspider_backend.com -d www.myspider_backend.com
+```
+Ensure you replace `/path/to` with the actual path of the TorSpider-Backend.
+
+Enable automatic certificate renewal.  Let's Encrypt certs are only good for a few months.
+```
+systemctl enable certbot.timer
+systemctl start certbot.timer
+```
+
+Reload Nginx
+```
+systemctl reload nginx
+```
+
+### Initialize the TorSpider Backend WebApp
+
+Run the backend_manage.py script once to generate the backend.cfg file:
 ```
 $ python backend_manage.py
 [+] Default configuration stored in backend.cfg.
 [+] Please edit backend.cfg before running TorSpider backend.
 ```
 
-Update your backend.cfg file with the PostgreSQL DB settings and ensure the database and user are created.
+Update your backend.cfg file with the PostgreSQL DB settings that were provided to you during the automated installation.
+
+If for some reason you want to run the site without SSL, ensure you set the USETLS setting to False.
+
+### Populate the Database 
 
 Next, you'll need to initialize the frontend database and seed it with values:
 ```
+# Create the database tables
 python3 backend_manage.py initdb
+# Seed the initial required values
 python3 backend_manage.py seed
 ```
 
-### SSL Certificates
-
-In order to encrypt communication with the backend API, you'll need SSL certificates. You can obtain these from a number of sources, or generate your own. Once you've got them, you'll need to save them in the `/etc/nginx/certs/torspider/` folder. You should have the following two files:
-
-`/etc/nginx/certs/torspider/cert.crt`
-`/etc/nginx/certs/torspider/cert.key`
-
-Once those certificates are in place, you should be able to run the backend.
-
-**Note:** These certificates are the same certificates as the ones used in the frontend installation.
-
-### Installing the Backend as a Service
-
-If you'd like to install the backend as a service:
-Please note, we assume torspider is installed as the torpsider user in /home/torspider.
-1. Run `sudo cp init/torspider-backend.service /etc/systemd/system/`
-2. Run `sudo systemctl daemon-reload`
-3. Run `sudo systemctl enable torspider-backend`
+If you receive psycopg2 errors during this phase, either PostgreSQL is not running or your username/password is incorrect.
 
 ### Generating Frontend API Keys
 
@@ -65,23 +127,6 @@ Let's get started:
 Run it as a service:
 `systemctl start torspider-backend`
 
-You are now running your API, exposed on http://your_ip:1080
+You are now running your API, exposed on http://your_ip/api/onions
 
-## Set up Nginx
-Nginx is used to expose both the frontend (1081) and backend (1080) websites on one port (80) to regular users.
-Ensure your have Nginx installed: `apt-get install nginx`
-
-Copy one of the provided nginx config files to /etc/nginx/sites-available.
-
-If you are installing the backend on a separate system from the frontend, copy the backend configuration as follows:
-
-`cp nginx_conf/backend /etc/nginx/sites-available/default`
-
-However, if you are running both the backend and frontend on the same system, copy the combined configuration as follows:
-
-`cp nginx_conf/combined /etc/nginx/sites-available/default`
-
-After copying the appropriate configuration file, restart Nginx:
-`service nginx restart`
-
-Once this is complete, you should be able to access the backend from http://your_ip/api/.
+**Note**: You should get unauthorized on a regular get, since you didn't pass your api keys. 
