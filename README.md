@@ -15,7 +15,7 @@ Run the installation script to install and configure the required software.
 The installer will run you through a set of questions to configure your instance.
 
 ```
-$ sudo ./install.sh
+$ sudo bash install.sh
 === TorSpider Backend Installer ===
 This installed will walk you through the installation process.
 <snip>
@@ -119,6 +119,13 @@ python3 backend_manage.py create_frontend_node
 ```
 
 The script will produce the necessary credentials for you. Be sure to write them down!
+
+
+### Tune PostgreSQL for your server
+PostgreSQL should be tuned based on the number of CPUs and memory available on your system.
+
+Head over to [PgTune](http://pgtune.leopard.in.ua/) to create a custom tuned configuration based on your parameters.
+Remember to restart postgres after you add them.
 
 ## Running the Backend
 Let's get started:

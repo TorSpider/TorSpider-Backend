@@ -15,6 +15,13 @@ check_root() {
     fi
 }
 
+check_for_string() {
+if ! type "$foobar_command_name" > /dev/null; then
+  echo "[-] You need to install strings.  Run sudo apt-get install -y binutils"
+fi
+
+}
+
 check_user() {
     echo "[+] Directory of TorSpider-Backend: $DIR"
     echo "[+] Installation Username: $backend_user"
@@ -91,8 +98,8 @@ create_selfsigned() {
                 openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout /etc/nginx/certs/torspider/backend-key.pem -out /etc/nginx/certs/torspider/backend.pem
                 # Accept Defaults
                 echo "[+] Setting permissions on /etc/nginx/certs/torspider/cert.*"
-                chmod 440 /etc/nginx/certs/torspider/cert.*
-                chown root:$backend_user /etc/nginx/certs/torspider/cert.*
+                chmod 440 /etc/nginx/certs/torspider/backend*
+                chown root:$backend_user /etc/nginx/certs/torspider/backend*
                 read -p "[?] Delete /etc/nginx/sites-available/default? You won't need this unless you have an existing site on this server. (Y/n)? " answer
                     case ${answer:0:1} in
                         n|N )
@@ -100,6 +107,8 @@ create_selfsigned() {
                             echo "[+] Anything else we do will likely impact an existing site."
                         ;;
                         * )
+                            echo "[+] Stopping nginx..."
+                            systemctl stop nginx
                             echo "[+] Deleting /etc/nginx/sites-available/default"
                             if [  -f /etc/nginx/sites-available/default ]; then
                                 rm /etc/nginx/sites-available/default
