@@ -33,7 +33,8 @@ def authenticated_preprocessor(search_params=None, **kwargs):
     except (ValueError, KeyError):
         # split failures or API key not valid
         raise ProcessingException(description='Not Authorized', code=401)
-    
+
+
 def authenticated_frontent_only_preprocessor(search_params=None, **kwargs):
     """
     Authenticates the api key from the spiders against the nodes table.
@@ -41,7 +42,10 @@ def authenticated_frontent_only_preprocessor(search_params=None, **kwargs):
     """
     auth = request.headers.get('Authorization', '').lower()
     node = request.headers.get('Authorization-Node', '').lower()
-    if node != 'frontend':
+    frontend_node = db.session.query(Nodes.unique_id).filter(Nodes.owner == 'FrontEnd').first()
+    if frontend_node:
+        frontend_node = frontend_node.unique_id
+    if node != frontend_node:
         # Won't serve if not frontend
         raise ProcessingException(description='Not Authorized', code=401)
     try:
