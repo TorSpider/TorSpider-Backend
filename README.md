@@ -87,14 +87,14 @@ systemctl reload nginx
 
 ### Initialize the TorSpider Backend WebApp
 
-Run the backend_manage.py script once to generate the backend.cfg file:
+Run the backend_manage.py script once to generate the instance/backend.cfg file:
 ```
 $ python backend_manage.py
-[+] Default configuration stored in backend.cfg.
-[+] Please edit backend.cfg before running TorSpider backend.
+[+] Default configuration stored in instace/backend.cfg.
+[+] Please edit instance/backend.cfg before running TorSpider backend.
 ```
 
-Update your backend.cfg file with the PostgreSQL DB settings that were provided to you during the automated installation.
+Update your instance/backend.cfg file with the PostgreSQL DB settings that were provided to you during the automated installation.
 
 If for some reason you want to run the site without SSL, ensure you set the USETLS setting to False.
 
@@ -137,3 +137,26 @@ Run it as a service:
 You are now running your API, exposed on http://your_ip/api/onions
 
 **Note**: You should receive `unauthorized` on a regular GET request, since you didn't pass your api keys. 
+
+## Running Celery
+Celery enables task scheduling in the background.
+
+The installation script already installed the services, and they will start automatically on a reboot. 
+
+Start the services manually:
+```
+systemctl start torspider-celery-beat
+systemctl start torspider-celery-worker
+```
+
+
+## Upgrading The Database
+If you are upgrading the application and you need to migrate any database changes, following these instructions:
+
+```
+python3 backend_manage.py db init
+python3 backend_manage.py db migrate
+python3 backend_manage.py db upgrade
+```
+
+This will initialize the database migration scripts and migrate to the new format of the tables in models.py

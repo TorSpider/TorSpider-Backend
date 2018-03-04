@@ -1,0 +1,11 @@
+[Unit]
+Description=torspider-celery-beat
+
+[Service]
+User=REPLACE_THE_USER
+WorkingDirectory=REPLACE_THE_PATH
+ExecStart=/bin/bash -c 'celery beat -A app.celery --schedule=/tmp/celerybeat-schedule --loglevel=INFO --pidfile=/tmp/celerybeat.pid > /dev/null 2>&1'
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

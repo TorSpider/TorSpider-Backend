@@ -130,3 +130,9 @@ class Nodes(db.Model, CreatedUpdatedMixin, SerializerMixin):
     api_key = db.Column(db.String(40), nullable=True, unique=True)
     owner = db.Column(db.String(32), nullable=False)
     active = db.Column(db.Boolean, default=True)
+
+class TopLists(db.Model, SerializerMixin):
+    __tablename__ = "top_lists"
+
+    list_name = db.Column(db.String(32), primary_key=True, nullable=False, unique=True)
+    list_data = db.Column(db.String, nullable=True)

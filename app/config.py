@@ -2,18 +2,20 @@ import sys
 import os
 import logging
 import configparser
-import uuid 
+import uuid
+from app import app
+from os import environ
 
-script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+os.makedirs(app.instance_path, exist_ok=True)
 
 
 def read_config():
-    if os.path.isfile(os.path.join(script_dir, 'backend.cfg')):
+    if os.path.isfile(os.path.join(app.instance_path, 'backend.cfg')):
         # Load the configuration file.
         try:
             my_config = {}
             config = configparser.ConfigParser()
-            config.read(os.path.join(script_dir, 'backend.cfg'))
+            config.read(os.path.join(app.instance_path, 'backend.cfg'))
             my_config['Database'] = {
                 'user': config['Database'].get('user'),
                 'password': config['Database'].get('password'),
@@ -41,9 +43,13 @@ def read_config():
                 'loglevel': logging.getLevelName(config['LOGGING'].get('loglevel')),
                 'apploglevel': logging.getLevelName(config['LOGGING'].get('apploglevel'))
             }
+            my_config['REDIS'] = {
+                'REDIS_HOST': config['REDIS'].get('REDIS_HOST'),
+                'REDIS_PORT': config['REDIS'].getint('REDIS_PORT')
+            }
             return my_config
         except Exception as e:
-            print('Could not parse backend.cfg. Please verify its syntax.')
+            print('Could not parse instance/backend.cfg. Please verify its syntax.')
             print('Error: {}'.format(e))
             sys.exit(0)
 
@@ -52,7 +58,7 @@ def make_config():
     '''
     Create the initial config file. 
     '''
-    if not os.path.exists(os.path.join(script_dir, 'backend.cfg')):
+    if not os.path.exists(os.path.join(app.instance_path, 'backend.cfg')):
         # If we don't yet have a configuration file, make one and tell the
         # user to set it up before continuing.
         default_config = configparser.RawConfigParser()
@@ -84,12 +90,16 @@ def make_config():
             'loglevel': 'INFO',
             'apploglevel': 'CRITICAL'
         }
-        with open(os.path.join(script_dir, 'backend.cfg'), 'w') as config_file:
+        default_config['REDIS'] = {
+            'REDIS_HOST': '127.0.0.1',
+            'REDIS_PORT': 6379
+        }
+        with open(os.path.join(app.instance_path, 'backend.cfg'), 'w') as config_file:
             default_config.write(config_file)
-        print('[+] Default configuration stored in backend.cfg.')
-        print('[+] Please edit backend.cfg before running TorSpider backend.')
+        print('[+] Default configuration stored in instance/backend.cfg.')
+        print('[+] Please edit instance/backend.cfg before running TorSpider backend.')
     else:
-        print('[!] The backend.cfg file already exists.  Please delete it to create a fresh one.')
+        print('[!] The instance/backend.cfg file already exists.  Please delete it to create a fresh one.')
 
 
 server_config = read_config()
@@ -116,4 +126,7 @@ class ProductionConf(object):
     WTF_CSRF_SECRET_KEY = server_config['WTForms'].get('WTF_CSRF_SECRET_KEY')
     SQLALCHEMY_ECHO = server_config['SQLAlchemy'].get('SQLALCHEMY_ECHO')
     SQLALCHEMY_TRACK_MODIFICATIONS = server_config['SQLAlchemy'].get('SQLALCHEMY_TRACK_MODIFICATIONS')
-    
+    REDIS_HOST = server_config['REDIS'].get('REDIS_HOST')
+    REDIS_PORT = server_config['REDIS'].get('REDIS_PORT')
+    BROKER_URL = environ.get('REDIS_URL', "redis://{host}:{port}/0".format(host=REDIS_HOST, port=str(REDIS_PORT)))
+    CELERY_RESULT_BACKEND = BROKER_URL
