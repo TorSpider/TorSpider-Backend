@@ -2,7 +2,7 @@
 Description=torspider-backend
 
 [Service]
-User=torspider
+User=REPLACE_THE_USER
 WorkingDirectory=REPLACE_THE_PATH
 ExecStart=/bin/bash -c '/usr/bin/python3 REPLACE_THE_PATH/backend_manage.py run > /dev/null 2>&1'
 Restart=always

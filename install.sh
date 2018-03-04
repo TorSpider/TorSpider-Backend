@@ -46,7 +46,7 @@ update_and_install_apt_packages() {
                 echo "[+] Performing apt-get update"
                 apt-get update
                 echo "[+] Installing required apt packages."
-                apt-get install -y git postgresql postgresql-server-dev-9.5 nginx python3 python3-pip python3-dev
+                apt-get install -y git postgresql postgresql-server-dev-9.5 nginx python3 python3-pip python3-dev redis-server
             ;;
         esac
    
@@ -128,13 +128,25 @@ install_service() {
                 echo "[+] Ok. Skipping self signed certificate creation."
             ;;
             * )
-                echo "[+] Registering service."
+                echo "[+] Registering torspider-backend service."
                 sed -i "s#REPLACE_THE_PATH#$DIR#g" $DIR/init/torspider-backend.service
                 sed -i "s#REPLACE_THE_USER#$backend_user#g" $DIR/init/torspider-backend.service
                 cp $DIR/init/torspider-backend.service /etc/systemd/system/
+                echo "[+] Registering torspider-celery-beat service."
+                sed -i "s#REPLACE_THE_PATH#$DIR#g" $DIR/init/torspider-celery-beat.service
+                sed -i "s#REPLACE_THE_USER#$backend_user#g" $DIR/init/torspider-celery-beat.service
+                cp $DIR/init/torspider-celery-beat.service /etc/systemd/system/
+                echo "[+] Registering torspider-celery-worker service."
+                sed -i "s#REPLACE_THE_PATH#$DIR#g" $DIR/init/torspider-celery-worker.service
+                sed -i "s#REPLACE_THE_USER#$backend_user#g" $DIR/init/torspider-celery-worker.service
+                cp $DIR/init/torspider-celery-worker.service /etc/systemd/system/
                 systemctl daemon-reload
-                echo "[+] Enabling service."
+                echo "[+] Enabling torspider-backend service."
                 systemctl enable torspider-backend
+                echo "[+] Enabling torspider-celery-beat service."
+                systemctl enable torspider-celery-beat
+                echo "[+] Enabling torspider-celery-worker service."
+                systemctl enable torspider--celery-worker
             ;;
         esac
 }
