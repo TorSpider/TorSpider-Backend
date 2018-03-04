@@ -2,7 +2,8 @@ import sys
 import os
 import logging
 import configparser
-import uuid 
+import uuid
+from os import environ
 
 script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
 
@@ -40,6 +41,10 @@ def read_config():
             my_config['LOGGING'] = {
                 'loglevel': logging.getLevelName(config['LOGGING'].get('loglevel')),
                 'apploglevel': logging.getLevelName(config['LOGGING'].get('apploglevel'))
+            }
+            my_config['REDIS'] = {
+                'REDIS_HOST': config['REDIS'].get('REDIS_HOST'),
+                'REDIS_PORT': config['REDIS'].getint('REDIS_PORT')
             }
             return my_config
         except Exception as e:
@@ -84,6 +89,10 @@ def make_config():
             'loglevel': 'INFO',
             'apploglevel': 'CRITICAL'
         }
+        default_config['REDIS'] = {
+            'REDIS_HOST': '127.0.0.1',
+            'REDIS_PORT': 6379
+        }
         with open(os.path.join(script_dir, 'backend.cfg'), 'w') as config_file:
             default_config.write(config_file)
         print('[+] Default configuration stored in backend.cfg.')
@@ -116,4 +125,8 @@ class ProductionConf(object):
     WTF_CSRF_SECRET_KEY = server_config['WTForms'].get('WTF_CSRF_SECRET_KEY')
     SQLALCHEMY_ECHO = server_config['SQLAlchemy'].get('SQLALCHEMY_ECHO')
     SQLALCHEMY_TRACK_MODIFICATIONS = server_config['SQLAlchemy'].get('SQLALCHEMY_TRACK_MODIFICATIONS')
-    
+    REDIS_HOST = server_config['REDIS'].get('REDIS_HOST')
+    REDIS_PORT = server_config['REDIS'].get('REDIS_PORT')
+    BROKER_URL = environ.get('REDIS_URL', "redis://{host}:{port}/0".format(host=REDIS_HOST, port=str(REDIS_PORT)))
+    CELERY_RESULT_BACKEND = BROKER_URL
+

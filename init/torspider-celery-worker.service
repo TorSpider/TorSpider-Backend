@@ -1,0 +1,11 @@
+[Unit]
+Description=torspider-celery-worker
+
+[Service]
+User=REPLACE_THE_USER
+WorkingDirectory=REPLACE_THE_PATH
+ExecStart=/bin/bash -c 'celery worker -A app.celery --loglevel=INFO > /dev/null 2>&1'
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

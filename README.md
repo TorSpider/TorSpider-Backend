@@ -137,3 +137,14 @@ Run it as a service:
 You are now running your API, exposed on http://your_ip/api/onions
 
 **Note**: You should receive `unauthorized` on a regular GET request, since you didn't pass your api keys. 
+
+## Running Celery
+Celery enables task scheduling in the background.
+
+The installation script already installed the services, and they will start automatically on a reboot. 
+
+Start the services manually:
+```
+systemctl start torspider-celery-beat
+systemctl start torspider-celery-worker
+```
