@@ -15,7 +15,10 @@ def check_api_auth(frontend_only=False):
     node = request.headers.get('Authorization-Node', '').lower()
     # If we've marked this as a front-end only check, then ensure the frontend node is the requestor
     if frontend_only:
-        if node != 'frontend':
+        frontend_node = db.session.query(Nodes.unique_id).filter(Nodes.owner == 'FrontEnd').first()
+        if frontend_node:
+            frontend_node = frontend_node.unique_id
+        if node != frontend_node:
             # Won't serve if not frontend
             return False
     try:
