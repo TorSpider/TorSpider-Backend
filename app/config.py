@@ -49,7 +49,7 @@ def read_config():
             }
             return my_config
         except Exception as e:
-            print('Could not parse backend.cfg. Please verify its syntax.')
+            print('Could not parse instance/backend.cfg. Please verify its syntax.')
             print('Error: {}'.format(e))
             sys.exit(0)
 
@@ -96,10 +96,10 @@ def make_config():
         }
         with open(os.path.join(app.instance_path, 'backend.cfg'), 'w') as config_file:
             default_config.write(config_file)
-        print('[+] Default configuration stored in backend.cfg.')
-        print('[+] Please edit backend.cfg before running TorSpider backend.')
+        print('[+] Default configuration stored in instance/backend.cfg.')
+        print('[+] Please edit instance/backend.cfg before running TorSpider backend.')
     else:
-        print('[!] The backend.cfg file already exists.  Please delete it to create a fresh one.')
+        print('[!] The instance/backend.cfg file already exists.  Please delete it to create a fresh one.')
 
 
 server_config = read_config()
