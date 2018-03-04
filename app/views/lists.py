@@ -1,6 +1,5 @@
 from app.models import TopLists
 from app.helpers import check_api_auth, top_twenty_inlinks, top_twenty_outlinks, top_twenty_page_count
-from sqlalchemy import desc
 from flask import jsonify
 from flask import abort
 from app import app, db

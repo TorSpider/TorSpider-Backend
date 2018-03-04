@@ -148,3 +148,15 @@ Start the services manually:
 systemctl start torspider-celery-beat
 systemctl start torspider-celery-worker
 ```
+
+
+## Upgrading The Database
+If you are upgrading the application and you need to migrate any database changes, following these instructions:
+
+```
+python3 backend_manage.py db init
+python3 backend_manage.py db migrate
+python3 backend_manage.py db upgrade
+```
+
+This will initialize the database migration scripts and migrate to the new format of the tables in models.py
