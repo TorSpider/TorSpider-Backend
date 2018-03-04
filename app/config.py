@@ -3,18 +3,19 @@ import os
 import logging
 import configparser
 import uuid
+from app import app
 from os import environ
 
-script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+os.makedirs(app.instance_path, exist_ok=True)
 
 
 def read_config():
-    if os.path.isfile(os.path.join(script_dir, 'backend.cfg')):
+    if os.path.isfile(os.path.join(app.instance_path, 'backend.cfg')):
         # Load the configuration file.
         try:
             my_config = {}
             config = configparser.ConfigParser()
-            config.read(os.path.join(script_dir, 'backend.cfg'))
+            config.read(os.path.join(app.instance_path, 'backend.cfg'))
             my_config['Database'] = {
                 'user': config['Database'].get('user'),
                 'password': config['Database'].get('password'),
@@ -57,7 +58,7 @@ def make_config():
     '''
     Create the initial config file. 
     '''
-    if not os.path.exists(os.path.join(script_dir, 'backend.cfg')):
+    if not os.path.exists(os.path.join(app.instance_path, 'backend.cfg')):
         # If we don't yet have a configuration file, make one and tell the
         # user to set it up before continuing.
         default_config = configparser.RawConfigParser()
@@ -93,7 +94,7 @@ def make_config():
             'REDIS_HOST': '127.0.0.1',
             'REDIS_PORT': 6379
         }
-        with open(os.path.join(script_dir, 'backend.cfg'), 'w') as config_file:
+        with open(os.path.join(app.instance_path, 'backend.cfg'), 'w') as config_file:
             default_config.write(config_file)
         print('[+] Default configuration stored in backend.cfg.')
         print('[+] Please edit backend.cfg before running TorSpider backend.')
@@ -129,4 +130,3 @@ class ProductionConf(object):
     REDIS_PORT = server_config['REDIS'].get('REDIS_PORT')
     BROKER_URL = environ.get('REDIS_URL', "redis://{host}:{port}/0".format(host=REDIS_HOST, port=str(REDIS_PORT)))
     CELERY_RESULT_BACKEND = BROKER_URL
-

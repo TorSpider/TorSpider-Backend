@@ -146,7 +146,7 @@ install_service() {
                 echo "[+] Enabling torspider-celery-beat service."
                 systemctl enable torspider-celery-beat
                 echo "[+] Enabling torspider-celery-worker service."
-                systemctl enable torspider--celery-worker
+                systemctl enable torspider-celery-worker
             ;;
         esac
 }

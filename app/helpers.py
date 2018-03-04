@@ -2,6 +2,7 @@ from flask import request
 from app.models import Onions, Links, Pages, Nodes
 from sqlalchemy import desc
 from flask import jsonify
+import json
 from app import db
 
 
@@ -65,8 +66,8 @@ def top_twenty_page_count():
     ).group_by(Onions).limit(20)
     results = query.all()
     if len(results) is 0:
-        return jsonify({'object': {}})
-    return jsonify({'objects': results})
+        return json.dumps(({'object': {}}))
+    return json.dumps({'objects': results})
 
 
 """
@@ -109,8 +110,8 @@ def top_twenty_outlinks():
     ).group_by(Onions).limit(20)
     results = query.all()
     if len(results) is 0:
-        return jsonify({'object': {}})
-    return jsonify({'objects': results})
+        return json.dumps({'object': {}})
+    return json.dumps({'objects': results})
 
 
 """
@@ -153,5 +154,5 @@ def top_twenty_inlinks():
     ).group_by(Onions).limit(20)
     results = query.all()
     if len(results) is 0:
-        return jsonify({'object': {}})
-    return jsonify({'objects': results})
+        return json.dumps({'object': {}})
+    return json.dumps({'objects': results})

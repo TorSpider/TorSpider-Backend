@@ -87,14 +87,14 @@ systemctl reload nginx
 
 ### Initialize the TorSpider Backend WebApp
 
-Run the backend_manage.py script once to generate the backend.cfg file:
+Run the backend_manage.py script once to generate the instance/backend.cfg file:
 ```
 $ python backend_manage.py
-[+] Default configuration stored in backend.cfg.
-[+] Please edit backend.cfg before running TorSpider backend.
+[+] Default configuration stored in instace/backend.cfg.
+[+] Please edit instance/backend.cfg before running TorSpider backend.
 ```
 
-Update your backend.cfg file with the PostgreSQL DB settings that were provided to you during the automated installation.
+Update your instance/backend.cfg file with the PostgreSQL DB settings that were provided to you during the automated installation.
 
 If for some reason you want to run the site without SSL, ensure you set the USETLS setting to False.
 
