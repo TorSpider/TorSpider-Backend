@@ -1,6 +1,6 @@
 from celery.schedules import crontab
 
-CELERY_IMPORTS = ('app.tasks.test')
+CELERY_IMPORTS = ('app.tasks.top20')
 CELERY_TASK_RESULT_EXPIRES = 30
 CELERY_TIMEZONE = 'UTC'
 
@@ -10,8 +10,8 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 CELERYBEAT_SCHEDULE = {
     'test-celery': {
-        'task': 'app.tasks.test.print_hello',
-        # Every minute
-        'schedule': crontab(minute="*"),
+        'task': 'app.tasks.top20.update_lists',
+        # Top of every hour
+        'schedule': crontab(minute="0"),
     }
 }
