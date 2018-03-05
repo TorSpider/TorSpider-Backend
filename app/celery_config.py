@@ -9,9 +9,14 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
 CELERYBEAT_SCHEDULE = {
-    'test-celery': {
+    'update_lists': {
         'task': 'app.tasks.top20.update_lists',
         # Top of every hour
         'schedule': crontab(minute="0"),
+    },
+    'update_queue': {
+        'task': 'app.tasks.populate_url_queue',
+        # Every 5 minutes
+        'schedule': crontab(minute="*/5"),
     }
 }
