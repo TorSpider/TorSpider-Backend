@@ -1,6 +1,6 @@
 from celery.schedules import crontab
 
-CELERY_IMPORTS = ('app.tasks.top20')
+CELERY_IMPORTS = ('app.tasks.top20', 'app.tasks.populate_url_queue')
 CELERY_TASK_RESULT_EXPIRES = 30
 CELERY_TIMEZONE = 'UTC'
 
