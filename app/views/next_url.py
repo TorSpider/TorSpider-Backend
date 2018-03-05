@@ -28,7 +28,7 @@ def next_url():
         # Grab the details of that url
         candidate = Urls.query.filter(Urls.url == next_url.url).first()
         # If this node was the last node, let's try again until that doesn't happen
-        if candidate.last_node != node_name:
+        if candidate.domain_info.last_node != node_name:
             break
     if not candidate:
         return jsonify({'object': {}})
