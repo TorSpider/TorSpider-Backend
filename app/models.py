@@ -136,3 +136,8 @@ class TopLists(db.Model, SerializerMixin):
 
     list_name = db.Column(db.String(32), primary_key=True, nullable=False, unique=True)
     list_data = db.Column(db.String, nullable=True)
+    
+class UrlQueue(db.Model, SerializerMixin):
+    __tablename__ = "url_queue"
+
+    url = db.Column(db.String, unique=True)
