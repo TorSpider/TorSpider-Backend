@@ -3,6 +3,7 @@ from app.models import TopLists
 from app.helpers import top_twenty_page_count, top_twenty_outlinks, top_twenty_inlinks
 from app import db, app
 
+
 @celery.task()
 def update_lists():
     with app.app_context():

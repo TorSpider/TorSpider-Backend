@@ -6,7 +6,7 @@ from app import db
 
 
 @celery.task()
-def next_url():
+def repopulate_queue():
     week_ago = (date.today() - timedelta(days=7))
     day_ago = (date.today() - timedelta(days=1))
     candidates = db.session.query(Urls.url).join(Onions).filter(
