@@ -28,6 +28,9 @@ def repopulate_queue():
     # Empty the queue
     db.session.query(UrlQueue).delete()
     for candidate in candidates:
+        # Let's not queue non-http urls for now.
+        if not candidate.url.startswith('http'):
+            continue
         try:
             # Rebuild the queue
             q = UrlQueue()
@@ -35,5 +38,5 @@ def repopulate_queue():
             db.session.merge(q)
         except:
             db.session.rollback()
-    # Commit the change, this means that we won't have commited the delete and rebuild until after it's all done
+    # Commit the change, this means that we won't have committed the delete and rebuild until after it's all done
     db.session.commit()
