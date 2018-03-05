@@ -15,7 +15,7 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(minute="0"),
     },
     'update_queue': {
-        'task': 'app.tasks.populate_url_queue',
+        'task': 'app.tasks.populate_url_queue.next_url',
         # Every 5 minutes
         'schedule': crontab(minute="*/5"),
     }
