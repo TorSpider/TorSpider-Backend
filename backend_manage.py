@@ -210,7 +210,7 @@ def update_url_queue():
     Manually update the url queue
     """
     print("Re-populating URL queue...")
-    populate_url_queue.next_url()
+    populate_url_queue.repopulate_queue()
     print("Complete...")
 
 
