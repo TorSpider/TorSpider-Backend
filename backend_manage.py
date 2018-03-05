@@ -4,10 +4,13 @@ import os
 import sys
 import uuid
 import hashlib
+import urllib.parse
+from flask import url_for
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from sqlalchemy import or_
 from app import app
+from app.tasks import populate_url_queue, top20
 from app.models import *
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -52,11 +55,11 @@ def run():
         os.makedirs(os.path.join(script_dir, 'logs'))
     # Format the logs.
     formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     # Enable the logs to split files at midnight.
     handler = TimedRotatingFileHandler(
-            os.path.join(script_dir, 'logs', 'TorSpider-Backend.log'),
-            when='midnight', backupCount=7, interval=1)
+        os.path.join(script_dir, 'logs', 'TorSpider-Backend.log'),
+        when='midnight', backupCount=7, interval=1)
     handler.setLevel(app.config['LOG_LEVEL'])
     handler.setFormatter(formatter)
     log = logging.getLogger('werkzeug')
@@ -182,9 +185,9 @@ def seed():
 
 @manager.command
 def list_routes():
-    # List all Flask routes between objects and urls.
-    import urllib.parse
-    from flask import url_for
+    """"
+    List all Flask routes between objects and urls.
+    """
     output = []
     for rule in app.url_map.iter_rules():
 
@@ -201,8 +204,27 @@ def list_routes():
         print(line)
 
 
+@manager.command
+def update_url_queue():
+    """"
+    Manually update the url queue
+    """
+    print("Re-populating URL queue...")
+    populate_url_queue.next_url()
+    print("Complete...")
+
+
+@manager.command
+def update_top20():
+    """"
+    Manually update the top20 lists
+    """
+    print("Re-populating top20 lists...")
+    top20.update_lists()
+    print("Complete...")
+
+
 if __name__ == '__main__':
     if sys.version_info[0] < 3:
         raise Exception("Please use Python version 3 to run this script.")
     manager.run()
-
