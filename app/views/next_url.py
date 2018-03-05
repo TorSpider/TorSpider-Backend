@@ -4,14 +4,12 @@ from flask import request
 from flask import abort
 from app import app, db
 from app.helpers import check_api_auth
-from app.models import Urls, Onions
-from datetime import date, timedelta
+from app.models import Urls, UrlQueue
 import json
 
 
 @app.route("/api/next", methods=["GET"])
 def next_url():
-    # TODO find a better serializer function
     # We get the node name from the get param, otherwise leave it blank
     if not check_api_auth:
         abort(401)
@@ -19,29 +17,30 @@ def next_url():
         node_name = json.loads(request.args.get('q'))['node_name']
     except:
         node_name = None
-    week_ago = (date.today() - timedelta(days=7))
-    day_ago = (date.today() - timedelta(days=1))
-    candidates = Urls.query.join(Onions).filter(
-        or_(
-            and_(
-                Urls.fault == None,
-                Urls.date < week_ago
-            ),and_(
-                Onions.online == True,
-                Onions.tries != 0,
-                Onions.last_node != node_name
-            ),and_(
-                Onions.online == False,
-                Onions.scan_date < day_ago,
-                Onions.last_node != node_name
-            )
-        )
-    ).order_by(
-        db.func.random()
-    ).limit(1).all()
-    if len(candidates) is 0:
+    # There's a situation where this could loop forever, so we'll put a safetynet here.
+    retries = 0
+    while retries <= 30:
+        retries += 1
+        # Grab a random item from the queue
+        next_url = UrlQueue.query.order_by(db.func.random()).first()
+        if not next_url:
+            return jsonify({'object': {}})
+        # Grab the details of that url
+        candidate = Urls.query.filter(Urls.url == next_url.url).first()
+        # If this node was the last node, let's try again until that doesn't happen
+        if candidate.domain_info.last_node != node_name:
+            break
+    if not candidate:
         return jsonify({'object': {}})
-    candidate = dict(candidates[0])
-    candidate['domain_info'] = dict(candidate['domain_info'])
-    candidate['domain_info']['urls'] = None
-    return jsonify({'objects': candidate})
+    # Build the dict
+    next_item = dict(candidate)
+    next_item['domain_info'] = dict(next_item['domain_info'])
+    next_item['domain_info']['urls'] = None
+    # Pop the item off the queue
+    try:
+        db.session.delete(next_url)
+        db.session.commit()
+    except:
+        db.session.rollback()
+    # Return the dict
+    return jsonify({'objects': next_item})
