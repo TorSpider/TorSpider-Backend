@@ -9,6 +9,8 @@ from app import db
 def repopulate_queue():
     week_ago = (date.today() - timedelta(days=7))
     day_ago = (date.today() - timedelta(days=1))
+    # It seems we don't need to populate the queue with millions of Urls if we repopulate it every 5 min or so.
+    # 10k should be ok.  Can be adjusted later.
     candidates = db.session.query(Urls.url).join(Onions).filter(
         or_(
             and_(
@@ -22,7 +24,7 @@ def repopulate_queue():
                 Onions.scan_date < day_ago
             )
         )
-    ).all()
+    ).order_by(db.func.random()).limit(10000).all()
     # Empty the current table and re-build the queue.
     # We are emptying because some of the items in there may no longer be 'good'
     # Empty the queue
