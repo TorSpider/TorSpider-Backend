@@ -3,7 +3,7 @@ from app.helpers import check_api_auth, top_twenty_inlinks, top_twenty_outlinks,
 from flask import jsonify
 from flask import abort
 from app import app, db
-
+import json
 
 @app.route("/api/top20", methods=["GET"])
 def top_twenty():
@@ -23,7 +23,7 @@ def api_top_twenty_page_count():
         abort(401)
     thelist = db.session.query(TopLists.list_data).filter(TopLists.list_name == 'pages').first()
     if thelist:
-        return jsonify(thelist[0])
+        return thelist[0]
     else:
         return jsonify({"objects": []})
 
@@ -41,7 +41,7 @@ def api_top_twenty_outlinks():
         abort(401)
     thelist = db.session.query(TopLists.list_data).filter(TopLists.list_name == 'outlinks').first()
     if thelist:
-        return jsonify(thelist[0])
+        return thelist[0]
     else:
         return jsonify({"objects": []})
 
@@ -59,6 +59,6 @@ def api_top_twenty_inlinks():
         abort(401)
     thelist = db.session.query(TopLists.list_data).filter(TopLists.list_name == 'inlinks').first()
     if thelist:
-        return jsonify(thelist[0])
+        return thelist[0]
     else:
         return jsonify({"objects": []})
