@@ -22,7 +22,10 @@ def api_top_twenty_page_count():
     if not check_api_auth(frontend_only=True):
         abort(401)
     thelist = db.session.query(TopLists.list_data).filter(TopLists.list_name == 'pages').first()
-    return jsonify(thelist)
+    if thelist:
+        return jsonify(thelist[0])
+    else:
+        return jsonify({"objects": []})
 
 
 @app.route("/api/top20/outlinks/live", methods=["GET"])
@@ -37,7 +40,10 @@ def api_top_twenty_outlinks():
     if not check_api_auth(frontend_only=True):
         abort(401)
     thelist = db.session.query(TopLists.list_data).filter(TopLists.list_name == 'outlinks').first()
-    return jsonify(thelist)
+    if thelist:
+        return jsonify(thelist[0])
+    else:
+        return jsonify({"objects": []})
 
 
 @app.route("/api/top20/inlinks/live", methods=["GET"])
@@ -52,4 +58,7 @@ def api_top_twenty_inlinks():
     if not check_api_auth(frontend_only=True):
         abort(401)
     thelist = db.session.query(TopLists.list_data).filter(TopLists.list_name == 'inlinks').first()
-    return jsonify(thelist)
+    if thelist:
+        return jsonify(thelist[0])
+    else:
+        return jsonify({"objects": []})
