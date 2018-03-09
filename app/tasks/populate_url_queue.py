@@ -24,7 +24,7 @@ def repopulate_queue():
                 Onions.scan_date < day_ago
             )
         )
-    ).order_by(db.func.random()).limit(10000).all()
+    ).order_by(db.func.random()).limit(1000).all()
     # Empty the current table and re-build the queue.
     # We are emptying because some of the items in there may no longer be 'good'
     # Empty the queue
