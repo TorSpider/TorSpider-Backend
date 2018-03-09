@@ -11,7 +11,7 @@ import json
 @app.route("/api/next", methods=["GET"])
 def next_url():
     # We get the node name from the get param, otherwise leave it blank
-    if not check_api_auth:
+    if not check_api_auth():
         abort(401)
     try:
         node_name = json.loads(request.args.get('q'))['node_name']
