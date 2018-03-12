@@ -7,6 +7,12 @@ from app import db
 
 @celery.task()
 def repopulate_queue():
+    # This process is expensive and slows other queries down.  Let's no do it without a reason.  If we still have 100
+    # urls left in the queue, we do nothing...if it's close to empty, we can do something
+    url_count = db.session.query(UrlQueue.url).count()
+    if url_count > 100:
+        # Do nothing
+        return True
     week_ago = (date.today() - timedelta(days=7))
     day_ago = (date.today() - timedelta(days=1))
     # It seems we don't need to populate the queue with millions of Urls if we repopulate it every 5 min or so.
