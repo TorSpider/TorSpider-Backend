@@ -89,6 +89,18 @@ def add_link(origin_domain, link_domain):
     pass
 
 
+def defrag_domain(domain):
+    # Defragment the given domain.
+    domain_parts = domain.split('.')
+    # Onion domains don't have strange symbols or numbers in them, so be
+    # sure to remove any of those just in case someone's obfuscating
+    # domains for whatever reason.
+    domain_parts[-2] = ''.join(
+        ch for ch in domain_parts[-2] if ch.isalnum())
+    domain = '.'.join(domain_parts)
+    return domain
+
+
 def fix_url(url):
     # Fix obfuscated urls.
     (scheme, netloc, path, query, fragment) = urlsplit(url)
