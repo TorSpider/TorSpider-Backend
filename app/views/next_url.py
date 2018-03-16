@@ -5,6 +5,7 @@ from flask import abort
 from app import app, db
 from app.helpers import check_api_auth
 from app.models import Urls, UrlQueue
+from urllib.parse import urlsplit
 import json
 
 
@@ -25,6 +26,9 @@ def next_url():
         next_url = UrlQueue.query.order_by(db.func.random()).first()
         if not next_url:
             return jsonify({'object': {}})
+        if not is_http(next_url.url):
+            # Make sure we only send http/https urls.
+            continue
         # Grab the details of that url
         candidate = Urls.query.filter(Urls.url == next_url.url).first()
         # If this node was the last node, let's try again until that doesn't happen
@@ -44,3 +48,9 @@ def next_url():
         db.session.rollback()
     # Return the dict
     return jsonify({'objects': next_item})
+
+
+def is_http(url):
+    # Determine whether the link is an http/https scheme or not.
+    (scheme, netloc, path, query, fragment) = urlsplit(url)
+    return True if 'http' in scheme else False
