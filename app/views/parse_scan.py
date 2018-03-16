@@ -67,12 +67,68 @@ def add_to_queue(link_url, origin_domain):
 
 def process_url(url):
     # TODO: Complete this function.
-    pass
+    # Add the url's information to the database.
+    url = fix_url(url)
+    domain = get_domain(url)
+    query = get_query(url)
+    try:
+        # Insert the url into its various tables.
+        add_page(domain, url)
+
+        # Process and add any discovered form data.
+        for item in query:
+            if item == ['']:
+                # Ignore empty form data.
+                continue
+            try:
+                [field, value] = item
+            except Exception as e:
+                # Sometimes they have a field without a query.
+                # e.g. /index.php?do=
+                [field] = item
+                value = 'none'
+            # We don't need to process it if the field is empty.
+            if field == '':
+                continue
+            add_form(url, field)
+
+            # Next, determine what examples already exist in the database.
+            # Only do this if we have a value to add.
+            if value == '' or value == 'none':
+                continue
+
+            # TODO: Query the forms table to see what data already exists.
+            # result = query(blah)
+            if(len(result)):
+                result_examples = result[0].get(examples)
+            else:
+                result_examples = None
+
+            if not result_examples:
+                examples = value
+            else:
+                # Merge with the returned examples.
+                example_list = result_examples.split(',')
+                example_list.append(value)
+                examples = ','.join(unique(example_list))
+
+            # Finally, update the tables in the database.
+            update_forms(url, field, examples)
+
+    except Exception as e:
+        # Couldn't process the url.
+        raise
 
 
 def add_onion(link_domain):
     # TODO: Complete this function.
     # Only add a domain if the domain isn't already in the database.
+    pass
+
+
+def add_page(link_domain, link_url):
+    # TODO: Complete this function.
+    # Only add a page if it isn't already in the database.
     pass
 
 
@@ -115,3 +171,25 @@ def get_domain(url):
     # like sub1.onionpage.onion and sub2.onionpage.onion, just keep them
     # all under onionpage.onion.
     return '.'.join(defrag_domain(urlsplit(url).netloc).split('.')[-2:])
+
+
+def get_query(url):
+    # Get the query information from the url.
+    # Queries look like: /page.php?field=value&field2=value2
+    # Splitting along the & we get field=value, field2=value2
+    query = urlsplit(url).query.split('&')
+    result = []
+    for item in query:
+        # Splitting each query along the '=' we get
+        # [[field1, value], [field2, value2]]
+        item_parts = item.split('=')
+        field = item_parts[0]
+        value = '='.join(item_parts[1:])
+        result.append([field, value])
+    return result
+
+
+def update_forms(url, field, examples):
+    # Update the forms table, filling in examples for the specified field.
+    # TODO: Complete this function.
+    pass
