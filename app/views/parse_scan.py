@@ -8,6 +8,7 @@ import json
 from sqlalchemy import and_, or_
 from sqlalchemy.dialects.postgresql import insert
 from urllib.parse import urlsplit, urlunsplit
+import datetime
 
 
 @app.route("/api/parse_scan", methods=["PUT", "POST"])
@@ -36,30 +37,147 @@ def parse_scan():
     last_node = scan_result['last_node']  # Default: None
     form_dicts = scan_result['form_dicts']  # Default: []
 
-    # TODO: Set the scan_date and last_node of the onion.
+    # Get additional values.
+    domain = get_domain(url)
+    page = get_page(url)
 
-    # TODO: Set the date of the url to scan_date.
+    # Process the domain depending on whether the domain is online or not.
+    # TODO: Sanity check - Does this work?
+    if(online):
+        # If the url is online, update onions and set last_online to scan_date,
+        # tries to 0, and offline_scans to 0.
+        try:
+            db.session.update().where(
+                Onions.domain == domain
+            ).values(
+                Onions.last_online = scan_date,
+                Onions.tries = 0,
+                Onions.offline_scans = 0
+            )
+            db.session.commit()
+        except:
+            db.session.rollback()
 
-    # TODO: If the url is online, update onions and set last_online to
-    # scan_date, tries to 0, and offline_scans to 0.
+        # If the url is online and there is no fault, process_url.
+        if(fault == None):
+            process_url(url)
+    else:
+        # If the url is offline, increment tries. If tries >= 3, set
+        # tries = 0 and onion as offline, then set offline_scans += 1. Then set
+        # the onion scan_date to the current date + offline_scans.
+        result = Onions.query.filter(Onions.domain == domain).first()
+        onion = dict(result)
+        tries = onion['tries']
+        offline_scans = onion['offline_scans']
+        tries += 1
+        if(tries >= 3):
+            offline_scans += 1
+            tries = 0
+            # Increment the scan_date by the number of offline_scans.
+            date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            new_date = date + datetime.timedelta(days = offline_scans)
+            scan_date = '%Y-%m-%d'.format(new_date)
 
-    # TODO: If the url is offline, increment tries. If tries >= 3, set
-    # tries = 0 and onion as offline, then set offline_scans += 1. Then set
-    # the onion scan_date to the current date + offline_scans.
+        # TODO: Sanity check - Does this work?
+        try:
+            db.session.update().where(
+                Onions.domain == domain
+            ).values(
+                Onions.tries = tries,
+                Onions.offline_scans = offline_scans
+            )
+            db.session.commit()
+        except:
+            db.session.rollback()
 
-    # TODO: If there's a fault in the url, log that fault in the database.
+    # Set the scan_date and last_node of the onion.
+    # TODO: Sanity check - Does this work?
+    try:
+        db.session.update().where(
+            Onions.domain == domain
+        ).values(
+            Onions.scan_date = scan_date,
+            Onions.last_node = last_node
+        )
+        db.session.commit()
+    except:
+        db.session.rollback()
 
-    # TODO: If the url is online and there is no fault, process_url.
+    # Set the date of the url to scan_date.
+    # TODO: Sanity check - Does this work?
+    try:
+        db.session.update().where(
+            Urls.url == url
+        ).values(
+            Urls.date = scan_date
+        )
+        db.session.commit()
+    except:
+        db.session.rollback()
 
-    # TODO: For every new_url in the new_urls list, add_to_queue the url.
+    # If there's a fault in the url, log that fault in the database.
+    # TODO: Sanity check - Does this work?
+    try:
+        db.session.update().where(
+            Urls.url == url
+        ).values(
+            Urls.fault = fault
+        )
+        db.session.commit()
+    except:
+        db.session.rollback()
 
-    # TODO: Update the page's hash if scan_result['hash'] is set.
+    # For every new_url in the new_urls list, add_to_queue the url.
+    for new_url in new_urls:
+        add_to_queue(url, domain)
 
-    # TODO: Update the url's title if it has changed.
+    # Update the page's hash if scan_result['hash'] is set.
+    if hash:
+        # TODO: Sanity check - Does this work?
+        try:
+            db.session.update().where(
+                Urls.url == url
+            ).values(
+                Urls.hash = hash
+            )
+            db.session.commit()
+        except:
+            db.session.rollback()
 
-    # TODO: Update the page's title if it has changed.
+    if title:
+        # Update the url's title.
+        result = Urls.query.filter(Urls.url == url).first()
+        url_data = dict(result)
+        if url_data['title'] != 'Unknown':
+            title = merge_titles(url_data['title'], title)
 
-    # TODO: Update the page's form data based on form_dicts.
+        # Update the page's title.
+        result = Pages.query.filter(Pages.url == page).first()
+        page_data = dict(result)
+        page_title = title
+        if page_data['title'] != 'Unknown':
+            page_title = merge_titles(title, page_data['title'])
+
+        # TODO: Sanity check - Does this work?
+        try:
+            # Commit the changes.
+            db.session.update().where(
+                Urls.url == url
+            ).values(
+                Urls.title = title
+            )
+            db.session.update().where(
+                Pages.url == page
+            ).values(
+                Pages.title = page_title
+            )
+            db.session.commit()
+        except:
+            db.session.rollback()
+
+    # Update the page's form data based on form_dicts.
+    # TODO: Translate the form_dicts update from the spider to the backend,
+    # using update_form().
 
     return "Success!"
 
@@ -193,6 +311,12 @@ def get_domain(url):
     # like sub1.onionpage.onion and sub2.onionpage.onion, just keep them
     # all under onionpage.onion.
     return '.'.join(defrag_domain(urlsplit(url).netloc).split('.')[-2:])
+
+
+def get_page(url):
+    # Get the page of the url, using urlsplit.
+    # TODO: Complete this function.
+    pass
 
 
 def get_form(link_url, field):
