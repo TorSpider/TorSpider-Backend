@@ -25,6 +25,17 @@ def parse_scan():
 
     # TODO: Process the data in scan_result.
 
+    # Extract the values from scan_result.
+    url = scan_result['url']  # Default: None
+    hash = scan_result['hash']  # Default: None
+    title = scan_result['title']  # Default: None
+    fault = scan_result['fault']  # Default: None
+    online = scan_result['online']  # Default: False
+    new_urls = scan_result['new_urls']  # Default: []
+    scan_date = scan_result['scan_date']  # Default: None
+    last_node = scan_result['last_node']  # Default: None
+    form_dicts = scan_result['form_dicts']  # Default: []
+
     # TODO: Set the scan_date and last_node of the onion.
 
     # TODO: Set the date of the url to scan_date.
@@ -66,13 +77,14 @@ def add_to_queue(link_url, origin_domain):
 
 
 def process_url(url):
-    # TODO: Complete this function.
     # Add the url's information to the database.
     url = fix_url(url)
     domain = get_domain(url)
     query = get_query(url)
     try:
         # Insert the url into its various tables.
+
+        # Add the url's page to the database.
         add_page(domain, url)
 
         # Process and add any discovered form data.
@@ -90,6 +102,8 @@ def process_url(url):
             # We don't need to process it if the field is empty.
             if field == '':
                 continue
+
+            # Add the field to the forms table.
             add_form(url, field)
 
             # Next, determine what examples already exist in the database.
@@ -97,13 +111,15 @@ def process_url(url):
             if value == '' or value == 'none':
                 continue
 
-            # TODO: Query the forms table to see what data already exists.
-            # result = query(blah)
+            # Query the forms table to see what data already exists.
+            result = get_form(url, field)
             if(len(result)):
                 result_examples = result[0].get(examples)
             else:
                 result_examples = None
 
+            # If there are no examples, save the current example. Otherwise,
+            # merge the new examples with the old.
             if not result_examples:
                 examples = value
             else:
@@ -113,11 +129,17 @@ def process_url(url):
                 examples = ','.join(unique(example_list))
 
             # Finally, update the tables in the database.
-            update_forms(url, field, examples)
+            update_form(url, field, examples)
 
     except Exception as e:
         # Couldn't process the url.
         raise
+
+
+def add_form(link_url, field):
+    # TODO: Complete this function.
+    # Only add a form field if it isn't already in the database.
+    pass
 
 
 def add_onion(link_domain):
@@ -173,6 +195,12 @@ def get_domain(url):
     return '.'.join(defrag_domain(urlsplit(url).netloc).split('.')[-2:])
 
 
+def get_form(link_url, field):
+    # TODO: Complete this function.
+    # Retrieve the current example data for the specified form field.
+    pass
+
+
 def get_query(url):
     # Get the query information from the url.
     # Queries look like: /page.php?field=value&field2=value2
@@ -189,7 +217,7 @@ def get_query(url):
     return result
 
 
-def update_forms(url, field, examples):
+def update_form(url, field, examples):
     # Update the forms table, filling in examples for the specified field.
     # TODO: Complete this function.
     pass
