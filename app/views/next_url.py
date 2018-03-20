@@ -1,4 +1,3 @@
-from sqlalchemy import and_, or_
 from flask import jsonify
 from flask import request
 from flask import abort
@@ -37,9 +36,7 @@ def next_url():
     if not candidate:
         return jsonify({'object': {}})
     # Build the dict
-    next_item = dict(candidate)
-    next_item['domain_info'] = dict(next_item['domain_info'])
-    next_item['domain_info']['urls'] = None
+    next_item = {'url': candidate.url, 'hash': candidate.hash}
     # Pop the item off the queue
     try:
         db.session.delete(next_url)
