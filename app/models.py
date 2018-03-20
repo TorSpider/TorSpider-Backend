@@ -143,3 +143,10 @@ class UrlQueue(db.Model, SerializerMixin):
     __tablename__ = "url_queue"
 
     url = db.Column(db.String, primary_key=True, index=True, unique=True)
+
+
+class ParseQueue(db.Model):
+    __tablename__ = "parse_queue"
+
+    id = db.Column(db.Integer, primary_key=True, nullable=False, unique=True)
+    parse_data = db.Column(db.String)
