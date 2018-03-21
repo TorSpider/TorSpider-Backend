@@ -1,15 +1,17 @@
 import celery
-from app.models import Urls, Onions, ParseQueue
+from sqlalchemy.dialects.postgresql import insert
+from app.models import Urls, Onions, Pages, Links, Forms, ParseQueue
 from app import db, app
 from urllib.parse import urlsplit, urlunsplit
 import datetime
+from datetime import date, timedelta
 import json
 
 
 @celery.task()
 def parse_scan(queue_id):
     # We pass the queue id from the tasker, so this runs immediately on the specific queued item.
-    queue_item = ParseQueue.query.filter(id==queue_id).first()
+    queue_item = ParseQueue.query.filter(id == queue_id).first()
     if queue_item:
         try:
             scan_result = json.loads(queue_item.parse_data)
@@ -34,27 +36,34 @@ def parse_scan(queue_id):
     try:
         scan_date = datetime.datetime.strptime(scan_date, '%Y-%m-%d').date()
     except:
-        scan_date = datetime.date(1900, 1, 1)
+        scan_date = date.today()
 
     # Get additional values.
     domain = get_domain(url)
     page = get_page(url)
 
+    this_onion = Onions.query.filter(Onions.domain == domain).first()
+    this_url = Urls.query.filter(Urls.url == url).first()
+    this_page = Pages.query.filter(Pages.url == page).first()
+    if not this_onion:
+        # We couldn't find the onion, which is strange, so we'll skip out
+        app.logger.critical('Could not find onion domain for parsing: {}'.format(domain))
+        return False
+    if not this_url:
+        # We couldn't find the url, which is strange, so we'll skip out
+        app.logger.critical('Could not find url for parsing: {}'.format(url))
+        return False
+    if not this_page:
+        # We couldn't find the page, which is strange, so we'll skip out
+        app.logger.critical('Could not find page for parsing: {}'.format(page))
+        return False
     # Process the domain depending on whether the domain is online or not.
     if online:
         # If the url is online, update onions and set last_online to scan_date,
         # tries to 0, and offline_scans to 0.
-        try:
-            this_onion = Onions.query.filter(Onions.domain == domain).first()
-            if this_onion:
-                this_onion.last_online = scan_date
-                this_onion.tries = 0
-                this_onion.offline_scans = 0
-                db.session.marge(this_onion)
-                db.session.commit()
-        except:
-            db.session.rollback()
-
+        this_onion.last_online = scan_date
+        this_onion.tries = 0
+        this_onion.offline_scans = 0
         # If the url is online and there is no fault, process_url.
         if not fault:
             process_url(url)
@@ -62,121 +71,46 @@ def parse_scan(queue_id):
         # If the url is offline, increment tries. If tries >= 3, set
         # tries = 0 and onion as offline, then set offline_scans += 1. Then set
         # the onion scan_date to the current date + offline_scans.
-        result = Onions.query.filter(Onions.domain == domain).first()
-        onion = dict(result)
-        tries = onion['tries']
-        offline_scans = onion['offline_scans']
-        tries += 1
-        if(tries >= 3):
-            offline_scans += 1
-            tries = 0
-            # Increment the scan_date by the number of offline_scans.
-            date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-            new_date = date + datetime.timedelta(days = offline_scans)
-            scan_date = '%Y-%m-%d'.format(new_date)
-
-        # TODO: Sanity check - Does this work?
-        try:
-            db.session.update().where(
-                Onions.domain == domain
-            ).values(
-                Onions.tries = tries,
-                Onions.offline_scans = offline_scans
-            )
-            db.session.commit()
-        except:
-            db.session.rollback()
-
-    # Set the scan_date and last_node of the onion.
-    # TODO: Sanity check - Does this work?
-    try:
-        db.session.update().where(
-            Onions.domain == domain
-        ).values(
-            Onions.scan_date = scan_date,
-            Onions.last_node = last_node
-        )
-        db.session.commit()
-    except:
-        db.session.rollback()
-
+        this_onion.tries += 1
+        if this_onion.tries >= 3:
+            this_onion.offline_scans += 1
+            this_onion.tries = 0
+    # Set the scan date and last node
+    this_onion.scan_date = (scan_date + timedelta(days=this_onion.offline_scans)).strftime('%Y-%m-%d')
+    this_onion.last_node = last_node
     # Set the date of the url to scan_date.
-    # TODO: Sanity check - Does this work?
-    try:
-        db.session.update().where(
-            Urls.url == url
-        ).values(
-            Urls.date = scan_date
-        )
-        db.session.commit()
-    except:
-        db.session.rollback()
-
-    # If there's a fault in the url, log that fault in the database.
-    # TODO: Sanity check - Does this work?
-    try:
-        db.session.update().where(
-            Urls.url == url
-        ).values(
-            Urls.fault = fault
-        )
-        db.session.commit()
-    except:
-        db.session.rollback()
+    this_url.date = this_onion.scan_date
+    if fault:
+        this_url.fault = fault
 
     # For every new_url in the new_urls list, add_to_queue the url.
     for new_url in new_urls:
-        add_to_queue(url, domain)
+        add_to_queue(new_url, domain)
 
-    # Update the page's hash if scan_result['hash'] is set.
+    # Update the page's hash if the hash is set.
     if hash:
-        # TODO: Sanity check - Does this work?
-        try:
-            db.session.update().where(
-                Urls.url == url
-            ).values(
-                Urls.hash = hash
-            )
-            db.session.commit()
-        except:
-            db.session.rollback()
+        this_url.hash = hash
 
+    # If we found a title, update it
     if title:
         # Update the url's title.
-        result = Urls.query.filter(Urls.url == url).first()
-        url_data = dict(result)
-        if url_data['title'] != 'Unknown':
-            title = merge_titles(url_data['title'], title)
+        if this_url.title != 'Unknown':
+            this_url.title = merge_titles(this_url.title, title)
 
         # Update the page's title.
-        result = Pages.query.filter(Pages.url == page).first()
-        page_data = dict(result)
-        page_title = title
-        if page_data['title'] != 'Unknown':
-            page_title = merge_titles(title, page_data['title'])
+        if this_page.title != 'Unknown':
+            this_page.title = merge_titles(this_page.title, title)
 
-        # TODO: Sanity check - Does this work?
-        try:
-            # Commit the changes.
-            db.session.update().where(
-                Urls.url == url
-            ).values(
-                Urls.title = title
-            )
-            db.session.update().where(
-                Pages.url == page
-            ).values(
-                Pages.title = page_title
-            )
-            db.session.commit()
-        except:
-            db.session.rollback()
-
-    # Update the page's form data based on form_dicts.
-    # TODO: Translate the form_dicts update from the spider to the backend,
-    # using update_form().
-
-    return "Success!"
+    # Update all of the records
+    try:
+        db.session.merge(this_onion)
+        db.session.merge(this_url)
+        db.session.merge(this_page)
+        db.session.commit()
+    except:
+        app.logging.critical('Failed to update the scan results for url: {}'.format(url))
+        db.session.rollback()
+    return True
 
 
 def add_to_queue(link_url, origin_domain):
@@ -194,11 +128,11 @@ def add_to_queue(link_url, origin_domain):
 def process_url(url):
     # Add the url's information to the database.
     url = fix_url(url)
+    page = get_page(url)
     domain = get_domain(url)
     query = get_query(url)
     try:
         # Insert the url into its various tables.
-
         # Add the url's page to the database.
         add_page(domain, url)
 
@@ -219,7 +153,7 @@ def process_url(url):
                 continue
 
             # Add the field to the forms table.
-            add_form(url, field)
+            add_form(page, field)
 
             # Next, determine what examples already exist in the database.
             # Only do this if we have a value to add.
@@ -227,9 +161,9 @@ def process_url(url):
                 continue
 
             # Query the forms table to see what data already exists.
-            result = get_form(url, field)
-            if(len(result)):
-                result_examples = result[0].get(examples)
+            this_form = get_form(page, field)
+            if this_form:
+                result_examples = this_form.examples
             else:
                 result_examples = None
 
@@ -244,7 +178,7 @@ def process_url(url):
                 examples = ','.join(unique(example_list))
 
             # Finally, update the tables in the database.
-            update_form(url, field, examples)
+            update_form(page, field, examples)
 
     except Exception as e:
         # Couldn't process the url.
@@ -252,34 +186,54 @@ def process_url(url):
 
 
 def add_form(link_url, field):
-    # TODO: Complete this function.
     # Only add a form field if it isn't already in the database.
-    pass
+    insert_stmt = insert(Forms).values(
+        page=link_url,
+        field=field)
+    do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['page', 'field'])
+    db.engine.execute(do_nothing_stmt).execution_options(autocommit=True)
+    return True
 
 
 def add_onion(link_domain):
-    # TODO: Complete this function.
     # Only add a domain if the domain isn't already in the database.
-    pass
+    insert_stmt = insert(Onions).values(
+        domain=link_domain)
+    do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain'])
+    db.engine.execute(do_nothing_stmt).execution_options(autocommit=True)
+    return True
 
 
-def add_page(link_domain, link_url):
-    # TODO: Complete this function.
+def add_page(link_domain, page):
     # Only add a page if it isn't already in the database.
-    pass
+    insert_stmt = insert(Pages).values(
+        domain=link_domain,
+        url=page)
+    do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain', 'url'])
+    db.engine.execute(do_nothing_stmt).execution_options(autocommit=True)
+    return True
 
 
 def add_url(link_domain, link_url):
-    # TODO: Complete this function.
     # Only add a url if the url isn't already in the database.
-    pass
+    insert_stmt = insert(Urls).values(
+        domain=link_domain,
+        url=link_url)
+    do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain', 'url'])
+    db.engine.execute(do_nothing_stmt).execution_options(autocommit=True)
+    return True
 
 
 def add_link(origin_domain, link_domain):
-    # TODO: Complete this function.
     # Only add a link if the origin_domain and link_domain are not the same
     # and only if the link isn't already in the database.
-    pass
+    if origin_domain == link_domain:
+        return True
+    insert_stmt = insert(Links).values(
+        domain_from=origin_domain,
+        domain_to=link_domain)
+    do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain_from', 'domain_to'])
+    db.engine.execute(do_nothing_stmt).execution_options(autocommit=True)
 
 
 def defrag_domain(domain):
@@ -312,14 +266,15 @@ def get_domain(url):
 
 def get_page(url):
     # Get the page of the url, using urlsplit.
-    # TODO: Complete this function.
-    pass
+    s = urlsplit(url)
+    page_url = urlunsplit((s.scheme, s.netloc, s.path, '', ''))
+    return page_url
 
 
-def get_form(link_url, field):
-    # TODO: Complete this function.
+def get_form(page, field):
     # Retrieve the current example data for the specified form field.
-    pass
+    data = Forms.query.filter(Forms.page == page, Forms.field == field).first()
+    return data
 
 
 def get_query(url):
@@ -338,7 +293,31 @@ def get_query(url):
     return result
 
 
-def update_form(url, field, examples):
+def update_form(page, field, examples):
     # Update the forms table, filling in examples for the specified field.
-    # TODO: Complete this function.
-    pass
+    try:
+        update = Forms.query.filter(Forms.page == page, Forms.field == field).first()
+        update.examples = examples
+        db.session.merge(update)
+        db.session.commit()
+    except:
+        db.session.rollback()
+    return True
+
+
+def merge_titles(title1, title2):
+    title1_parts = title1.split()
+    title2_parts = title2.split()
+    new_title_parts = extract_exact(title1_parts, title2_parts)
+    new_title = ' '.join(new_title_parts)
+    return new_title
+
+
+def extract_exact(list1, list2):
+    # Return the common items from both lists.
+    return [item for item in list1 if any(scan == item for scan in list2)]
+
+
+def unique(items):
+    # Return the same list without duplicates)
+    return list(set(items))
