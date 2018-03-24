@@ -44,7 +44,7 @@ def parse_scan(queue_id):
 
         this_onion = Onions.query.filter(Onions.domain == domain).first()
         this_url = Urls.query.filter(Urls.url == url).first()
-        this_page = Pages.query.filter(Pages.url == page).first()
+
         if not this_onion:
             # We couldn't find the onion, which is strange, so we'll skip out
             app.logger.critical('Could not find onion domain for parsing: {}'.format(domain))
@@ -52,10 +52,6 @@ def parse_scan(queue_id):
         if not this_url:
             # We couldn't find the url, which is strange, so we'll skip out
             app.logger.critical('Could not find url for parsing: {}'.format(url))
-            return False
-        if not this_page:
-            # We couldn't find the page, which is strange, so we'll skip out
-            app.logger.critical('Could not find page for parsing: {}'.format(page))
             return False
         # Process the domain depending on whether the domain is online or not.
         if online:
@@ -68,6 +64,7 @@ def parse_scan(queue_id):
             if not fault:
                 process_url(url)
                 process_forms(form_dicts, domain, page, url)
+                this_page = Pages.query.filter(Pages.url == page).first()
         else:
             # If the url is offline, increment tries. If tries >= 3, set
             # tries = 0 and onion as offline, then set offline_scans += 1. Then set
@@ -97,16 +94,17 @@ def parse_scan(queue_id):
             # Update the url's title.
             if this_url.title != 'Unknown':
                 this_url.title = merge_titles(this_url.title, title)
-
-            # Update the page's title.
-            if this_page.title != 'Unknown':
-                this_page.title = merge_titles(this_page.title, title)
+            if this_page:
+                # Update the page's title.
+                if this_page.title != 'Unknown':
+                    this_page.title = merge_titles(this_page.title, title)
 
         # Update all of the records
         try:
             db.session.merge(this_onion)
             db.session.merge(this_url)
-            db.session.merge(this_page)
+            if this_page:
+                db.session.merge(this_page)
             db.session.commit()
         except:
             app.logging.critical('Failed to update the scan results for url: {}'.format(url))
