@@ -58,5 +58,5 @@ class MyJSONEncoder(JSONEncoder):
 app.json_encoder = MyJSONEncoder
 
 from app import api, models
-from app.views import next_url, lists
+from app.views import next_url, lists, parse_scan
 

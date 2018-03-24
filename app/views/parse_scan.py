@@ -7,7 +7,6 @@ from flask import abort
 import json
 
 
-
 @app.route("/api/parse", methods=["POST"])
 def queue_parse():
     """
@@ -34,6 +33,3 @@ def queue_parse():
         # Could not load the scan_result from the query.
         db.session.rollback()
         abort(400)  # Bad request.
-
-
-
