@@ -10,7 +10,7 @@ import json
 
 @celery.task()
 def parse_scan(queue_id):
-    with app.context():
+    with app.app_context():
         # We pass the queue id from the tasker, so this runs immediately on the specific queued item.
         queue_item = ParseQueue.query.filter(ParseQueue.id == queue_id).first()
         if queue_item:
