@@ -10,108 +10,108 @@ import json
 
 @celery.task()
 def parse_scan(queue_id):
-    # We pass the queue id from the tasker, so this runs immediately on the specific queued item.
-    queue_item = ParseQueue.query.filter(id == queue_id).first()
-    if queue_item:
+    with app.context():
+        # We pass the queue id from the tasker, so this runs immediately on the specific queued item.
+        queue_item = ParseQueue.query.filter(ParseQueue.id == queue_id).first()
+        if queue_item:
+            try:
+                scan_result = json.loads(queue_item.parse_data)
+            except:
+                app.logger.critical('Failed to parse the scan results for id {}.  JSON loading error'.format(queue_id))
+        else:
+            # We don't have any data for some reason, something isn't right, but we'll move on.
+            return False
+
+        # Extract the values from scan_result.
+        url = scan_result['url']  # Default: None
+        hash = scan_result['hash']  # Default: None
+        title = scan_result['title']  # Default: None
+        fault = scan_result['fault']  # Default: None
+        online = scan_result['online']  # Default: False
+        new_urls = scan_result['new_urls']  # Default: []
+        scan_date = scan_result['scan_date']  # Default: None
+        last_node = scan_result['last_node']  # Default: None
+        form_dicts = scan_result['form_dicts']  # Default: []
+
         try:
-            scan_result = json.loads(queue_item.parse_data)
+            scan_date = datetime.datetime.strptime(scan_date, '%Y-%m-%d').date()
         except:
-            app.logger.critical('Failed to parse the scan results for id {}.  JSON loading error'.format(queue_id))
-    else:
-        # We don't have any data for some reason, something isn't right, but we'll move on.
-        return False
-    # TODO: Process the data in scan_result.
+            scan_date = date.today()
 
-    # Extract the values from scan_result.
-    url = scan_result['url']  # Default: None
-    hash = scan_result['hash']  # Default: None
-    title = scan_result['title']  # Default: None
-    fault = scan_result['fault']  # Default: None
-    online = scan_result['online']  # Default: False
-    new_urls = scan_result['new_urls']  # Default: []
-    scan_date = scan_result['scan_date']  # Default: None
-    last_node = scan_result['last_node']  # Default: None
-    form_dicts = scan_result['form_dicts']  # Default: []
+        # Get additional values.
+        domain = get_domain(url)
+        page = get_page(url)
 
-    try:
-        scan_date = datetime.datetime.strptime(scan_date, '%Y-%m-%d').date()
-    except:
-        scan_date = date.today()
-
-    # Get additional values.
-    domain = get_domain(url)
-    page = get_page(url)
-
-    this_onion = Onions.query.filter(Onions.domain == domain).first()
-    this_url = Urls.query.filter(Urls.url == url).first()
-    this_page = Pages.query.filter(Pages.url == page).first()
-    if not this_onion:
-        # We couldn't find the onion, which is strange, so we'll skip out
-        app.logger.critical('Could not find onion domain for parsing: {}'.format(domain))
-        return False
-    if not this_url:
-        # We couldn't find the url, which is strange, so we'll skip out
-        app.logger.critical('Could not find url for parsing: {}'.format(url))
-        return False
-    if not this_page:
-        # We couldn't find the page, which is strange, so we'll skip out
-        app.logger.critical('Could not find page for parsing: {}'.format(page))
-        return False
-    # Process the domain depending on whether the domain is online or not.
-    if online:
-        # If the url is online, update onions and set last_online to scan_date,
-        # tries to 0, and offline_scans to 0.
-        this_onion.last_online = scan_date
-        this_onion.tries = 0
-        this_onion.offline_scans = 0
-        # If the url is online and there is no fault, process_url.
-        if not fault:
-            process_url(url)
-            process_forms(form_dicts, domain, page, url)
-    else:
-        # If the url is offline, increment tries. If tries >= 3, set
-        # tries = 0 and onion as offline, then set offline_scans += 1. Then set
-        # the onion scan_date to the current date + offline_scans.
-        this_onion.tries += 1
-        if this_onion.tries >= 3:
-            this_onion.offline_scans += 1
+        this_onion = Onions.query.filter(Onions.domain == domain).first()
+        this_url = Urls.query.filter(Urls.url == url).first()
+        this_page = Pages.query.filter(Pages.url == page).first()
+        if not this_onion:
+            # We couldn't find the onion, which is strange, so we'll skip out
+            app.logger.critical('Could not find onion domain for parsing: {}'.format(domain))
+            return False
+        if not this_url:
+            # We couldn't find the url, which is strange, so we'll skip out
+            app.logger.critical('Could not find url for parsing: {}'.format(url))
+            return False
+        if not this_page:
+            # We couldn't find the page, which is strange, so we'll skip out
+            app.logger.critical('Could not find page for parsing: {}'.format(page))
+            return False
+        # Process the domain depending on whether the domain is online or not.
+        if online:
+            # If the url is online, update onions and set last_online to scan_date,
+            # tries to 0, and offline_scans to 0.
+            this_onion.last_online = scan_date
             this_onion.tries = 0
-    # Set the scan date and last node
-    this_onion.scan_date = (scan_date + timedelta(days=this_onion.offline_scans)).strftime('%Y-%m-%d')
-    this_onion.last_node = last_node
-    # Set the date of the url to scan_date.
-    this_url.date = this_onion.scan_date
-    if fault:
-        this_url.fault = fault
+            this_onion.offline_scans = 0
+            # If the url is online and there is no fault, process_url.
+            if not fault:
+                process_url(url)
+                process_forms(form_dicts, domain, page, url)
+        else:
+            # If the url is offline, increment tries. If tries >= 3, set
+            # tries = 0 and onion as offline, then set offline_scans += 1. Then set
+            # the onion scan_date to the current date + offline_scans.
+            this_onion.tries += 1
+            if this_onion.tries >= 3:
+                this_onion.offline_scans += 1
+                this_onion.tries = 0
+        # Set the scan date and last node
+        this_onion.scan_date = (scan_date + timedelta(days=this_onion.offline_scans)).strftime('%Y-%m-%d')
+        this_onion.last_node = last_node
+        # Set the date of the url to scan_date.
+        this_url.date = this_onion.scan_date
+        if fault:
+            this_url.fault = fault
 
-    # For every new_url in the new_urls list, add_to_queue the url.
-    for new_url in new_urls:
-        add_to_queue(new_url, domain)
+        # For every new_url in the new_urls list, add_to_queue the url.
+        for new_url in new_urls:
+            add_to_queue(new_url, domain)
 
-    # Update the page's hash if the hash is set.
-    if hash:
-        this_url.hash = hash
+        # Update the page's hash if the hash is set.
+        if hash:
+            this_url.hash = hash
 
-    # If we found a title, update it
-    if title:
-        # Update the url's title.
-        if this_url.title != 'Unknown':
-            this_url.title = merge_titles(this_url.title, title)
+        # If we found a title, update it
+        if title:
+            # Update the url's title.
+            if this_url.title != 'Unknown':
+                this_url.title = merge_titles(this_url.title, title)
 
-        # Update the page's title.
-        if this_page.title != 'Unknown':
-            this_page.title = merge_titles(this_page.title, title)
+            # Update the page's title.
+            if this_page.title != 'Unknown':
+                this_page.title = merge_titles(this_page.title, title)
 
-    # Update all of the records
-    try:
-        db.session.merge(this_onion)
-        db.session.merge(this_url)
-        db.session.merge(this_page)
-        db.session.commit()
-    except:
-        app.logging.critical('Failed to update the scan results for url: {}'.format(url))
-        db.session.rollback()
-    return True
+        # Update all of the records
+        try:
+            db.session.merge(this_onion)
+            db.session.merge(this_url)
+            db.session.merge(this_page)
+            db.session.commit()
+        except:
+            app.logging.critical('Failed to update the scan results for url: {}'.format(url))
+            db.session.rollback()
+        return True
 
 
 def add_to_queue(link_url, origin_domain):
@@ -192,7 +192,7 @@ def add_form(link_url, field):
         page=link_url,
         field=field)
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['page', 'field'])
-    db.engine.execute(do_nothing_stmt).execution_options(autocommit=True)
+    db.engine.execute(do_nothing_stmt.execution_options(autocommit=True))
     return True
 
 
@@ -201,7 +201,7 @@ def add_onion(link_domain):
     insert_stmt = insert(Onions).values(
         domain=link_domain)
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain'])
-    db.engine.execute(do_nothing_stmt).execution_options(autocommit=True)
+    db.engine.execute(do_nothing_stmt.execution_options(autocommit=True))
     return True
 
 
@@ -211,7 +211,7 @@ def add_page(link_domain, page):
         domain=link_domain,
         url=page)
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain', 'url'])
-    db.engine.execute(do_nothing_stmt).execution_options(autocommit=True)
+    db.engine.execute(do_nothing_stmt.execution_options(autocommit=True))
     return True
 
 
@@ -221,7 +221,7 @@ def add_url(link_domain, link_url):
         domain=link_domain,
         url=link_url)
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain', 'url'])
-    db.engine.execute(do_nothing_stmt).execution_options(autocommit=True)
+    db.engine.execute(do_nothing_stmt.execution_options(autocommit=True))
     return True
 
 
@@ -234,7 +234,7 @@ def add_link(origin_domain, link_domain):
         domain_from=origin_domain,
         domain_to=link_domain)
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain_from', 'domain_to'])
-    db.engine.execute(do_nothing_stmt).execution_options(autocommit=True)
+    db.engine.execute(do_nothing_stmt.execution_options(autocommit=True))
 
 
 def defrag_domain(domain):

@@ -21,7 +21,7 @@ def queue_parse():
     # Get the scan_result from the query.
     try:
         # Grab the data from the body of the request
-        scan_result = request.data
+        scan_result = request.data.decode('utf-8')
         # Add the data to the queue
         new_parse = ParseQueue()
         new_parse.parse_data = scan_result
