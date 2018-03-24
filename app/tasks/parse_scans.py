@@ -67,6 +67,7 @@ def parse_scan(queue_id):
         # If the url is online and there is no fault, process_url.
         if not fault:
             process_url(url)
+            process_forms(form_dicts, domain, page, url)
     else:
         # If the url is offline, increment tries. If tries >= 3, set
         # tries = 0 and onion as offline, then set offline_scans += 1. Then set
@@ -305,6 +306,133 @@ def update_form(page, field, examples):
     return True
 
 
+def process_forms(form_dicts, domain, page, url):
+    # Add the forms to the database.
+    for form_dict in form_dicts:
+        # Process the form's information.
+
+        # Make sure the necessary fields exist.
+        if 'action' not in form_dict.keys():
+            form_dict['action'] = ''
+        if 'method' not in form_dict.keys():
+            form_dict['method'] = ''
+        if 'target' not in form_dict.keys():
+            form_dict['target'] = ''
+
+        # Get the form's action, and add it to the database.
+        action_url = merge_urls(form_dict['action'], url)
+        if '.onion' not in action_url or '.onion.' in action_url:
+            # Ignore any non-onion domain.
+            continue
+        add_to_queue(action_url, domain)
+
+        # Now we'll need to add each input field and its
+        # possible default values.
+        fields = {}
+
+        # Process text fields.
+        text_fields = form_dict['text_fields']
+        for key in text_fields.keys():
+            fields[key] = text_fields[key]
+
+        # Process radio buttons.
+        radio_buttons = form_dict['radio_buttons']
+        for key in radio_buttons.keys():
+            rb_values = radio_buttons[key]
+            rb_values = prune_exact(rb_values, ['', None])
+            fields[key] = ','.join(rb_values)
+
+        # Process checkboxes.
+        checkboxes = form_dict['checkboxes']
+        for key in checkboxes.keys():
+            cb_values = checkboxes[key]
+            cb_values = prune_exact(cb_values, ['', None])
+            fields[key] = ','.join(cb_values)
+
+        # Process dropdowns.
+        dropdowns = form_dict['dropdowns']
+        for key in dropdowns.keys():
+            dd_values = dropdowns[key]
+            dd_values = prune_exact(dd_values, ['', None])
+            fields[key] = ','.join(dd_values)
+
+        # Process text areas.
+        text_areas = form_dict['text_areas']
+        for key in text_areas.keys():
+            fields[key] = text_areas[key]
+
+        # Process dates.
+        for d in form_dict['dates']:
+            fields[d] = ''
+
+        # Process datetimes.
+        for dt in form_dict['datetimes']:
+            fields[dt] = ''
+
+        # Process months.
+        for month in form_dict['months']:
+            fields[month] = ''
+
+        # Process numbers.
+        for number in form_dict['numbers']:
+            fields[number] = ''
+
+        # Process ranges.
+        for r in form_dict['ranges']:
+            fields[r] = ''
+
+        # Process times.
+        for t in form_dict['times']:
+            fields[t] = ''
+
+        # Process weeks.
+        for week in form_dict['weeks']:
+            fields[week] = ''
+
+        # Process the retrieved fields and add them to the
+        # database.
+        for key in fields.keys():
+            value = fields[key]
+            if key is None or key == '':
+                key = 'None'
+            if value is None or value == '':
+                value = 'None'
+            # Add the key to the database if it isn't there.
+            # TODO: Check that the form field isn't already
+            # present before adding it to the database.
+            add_form(action_url, key)
+            if value == 'None':
+                continue
+
+            # Retrieve the current list of examples for this
+            # particular form field.
+            this_form = get_form(page, key)
+            if this_form:
+                result_examples = this_form.examples
+            else:
+                result_examples = None
+
+            examples_have_changed = False
+            if not result_examples:
+                # We have no current values.
+                examples = value
+            else:
+                # Merge with the returned examples.
+                example_list = result_examples.split(',')
+                old_list = list(example_list)
+                example_list.append(value)
+                example_list = unique(example_list)
+                example_list.sort()
+                if old_list != example_list:
+                    examples_have_changed = True
+                examples = ','.join(example_list)
+
+            # Update the examples in the database, but only if
+            # the values have changed.
+            if examples_have_changed:
+                update_form(page, key, examples)
+
+
 def merge_titles(title1, title2):
     title1_parts = title1.split()
     title2_parts = title2.split()
@@ -318,6 +446,56 @@ def extract_exact(list1, list2):
     return [item for item in list1 if any(scan == item for scan in list2)]
 
 
+def prune_exact(items, scan_list):
+    # Return all items from items list that match no items in scan_list.
+    return [item for item in items
+            if not any(scan == item for scan in scan_list)]
+
+
 def unique(items):
     # Return the same list without duplicates)
     return list(set(items))
+
+
+def merge_urls(url1, url2):
+    url1 = '' if url1 is None else url1
+    # Split up url1 and url into their component parts.
+    (ascheme, anetloc, apath, aquery, afragment) = urlsplit(url1)
+    (uscheme, unetloc, upath, uquery, ufragment) = urlsplit(url2)
+    scheme = ascheme if ascheme is not '' else uscheme
+    netloc = anetloc if anetloc is not '' else unetloc
+    try:
+        if apath[0] == '/':
+            # The path starts at root.
+            newpath = apath
+        elif apath[0] == '.':
+            # The path starts in either the current directory or a
+            # higher directory.
+            short = upath[:upath.rindex('/') + 1]
+            split_apath = apath.split('/')
+            apath = '/'.join(split_apath[1:])
+            if split_apath[0] == '.':
+                # Targeting the current directory.
+                short = '/'.join(short.split('/')[:-1])
+            elif split_apath[0] == '..':
+                # Targeting the previous directory.
+                traverse = -2
+                while apath[0:3] == '../':
+                    split_apath = apath.split('/')
+                    apath = '/'.join(split_apath[1:])
+                    traverse -= 1
+                try:
+                    short = '/'.join(short.split('/')[:traverse])
+                except Exception as e:
+                    short = '/'
+            newpath = '/'.join([short, apath])
+        else:
+            # The path is just a page name.
+            short = upath[:upath.rindex('/')]
+            newpath = '/'.join([short, apath])
+    except Exception as e:
+        newpath = upath
+    query = aquery
+    fragment = ''
+    link = urlunsplit((scheme, netloc, newpath, query, fragment))
+    return link
