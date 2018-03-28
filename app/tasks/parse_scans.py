@@ -19,6 +19,8 @@ def parse_scan(queue_id):
                 scan_result = json.loads(queue_item.parse_data)
             except:
                 app.logger.critical('Failed to parse the scan results for id {}.  JSON loading error'.format(queue_id))
+                # Don't continue to process if we don't have a scan_result.
+                return False
         else:
             # We don't have any data for some reason, something isn't right, but we'll move on.
             return False
