@@ -11,6 +11,7 @@ import json
 @celery.task()
 def parse_scan(queue_id):
     with app.app_context():
+        this_onion = this_page = this_url = None
         # We pass the queue id from the tasker, so this runs immediately on the specific queued item.
         queue_item = ParseQueue.query.filter(ParseQueue.id == queue_id).first()
         if queue_item:
@@ -105,9 +106,10 @@ def parse_scan(queue_id):
             db.session.merge(this_url)
             if this_page:
                 db.session.merge(this_page)
+            db.session.delete(queue_item)
             db.session.commit()
         except:
-            app.logging.critical('Failed to update the scan results for url: {}'.format(url))
+            app.logger.critical('Failed to update the scan results for url: {}'.format(url))
             db.session.rollback()
         return True
 
@@ -184,10 +186,10 @@ def process_url(url):
         raise
 
 
-def add_form(link_url, field):
+def add_form(page, field):
     # Only add a form field if it isn't already in the database.
     insert_stmt = insert(Forms).values(
-        page=link_url,
+        page=page,
         field=field)
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['page', 'field'])
     db.engine.execute(do_nothing_stmt.execution_options(autocommit=True))
@@ -208,7 +210,7 @@ def add_page(link_domain, page):
     insert_stmt = insert(Pages).values(
         domain=link_domain,
         url=page)
-    do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain', 'url'])
+    do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['url'])
     db.engine.execute(do_nothing_stmt.execution_options(autocommit=True))
     return True
 
@@ -322,6 +324,7 @@ def process_forms(form_dicts, domain, page, url):
         if '.onion' not in action_url or '.onion.' in action_url:
             # Ignore any non-onion domain.
             continue
+        add_page(get_domain(action_url), get_page(action_url))
         add_to_queue(action_url, domain)
 
         # Now we'll need to add each input field and its
@@ -396,8 +399,6 @@ def process_forms(form_dicts, domain, page, url):
             if value is None or value == '':
                 value = 'None'
             # Add the key to the database if it isn't there.
-            # TODO: Check that the form field isn't already
-            # present before adding it to the database.
             add_form(action_url, key)
             if value == 'None':
                 continue
