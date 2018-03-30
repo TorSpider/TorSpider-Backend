@@ -195,7 +195,10 @@ def add_form(page, field):
         field=field)
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['page', 'field'])
     db.engine.execute(do_nothing_stmt)
-    db.session.commit()
+    try:
+        db.sssion.commit()
+    except:
+        db.session.rollback()
     return True
 
 
@@ -205,7 +208,10 @@ def add_onion(link_domain):
         domain=link_domain)
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain'])
     db.engine.execute(do_nothing_stmt)
-    db.session.commit()
+    try:
+        db.sssion.commit()
+    except:
+        db.session.rollback()
     return True
 
 
@@ -216,7 +222,10 @@ def add_page(link_domain, page):
         url=page)
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['url'])
     db.engine.execute(do_nothing_stmt)
-    db.session.commit()
+    try:
+        db.sssion.commit()
+    except:
+        db.session.rollback()
     return True
 
 
@@ -227,7 +236,10 @@ def add_url(link_domain, link_url):
         url=link_url)
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain', 'url'])
     db.engine.execute(do_nothing_stmt)
-    db.session.commit()
+    try:
+        db.sssion.commit()
+    except:
+        db.session.rollback()
     return True
 
 
@@ -241,7 +253,10 @@ def add_link(origin_domain, link_domain):
         domain_to=link_domain)
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain_from', 'domain_to'])
     db.engine.execute(do_nothing_stmt)
-    db.session.commit()
+    try:
+        db.sssion.commit()
+    except:
+        db.session.rollback()
     return True
 
 
