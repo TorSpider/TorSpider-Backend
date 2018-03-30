@@ -422,12 +422,13 @@ def process_forms(form_dicts, domain, page, url):
             if value is None or value == '':
                 value = 'None'
             # Add the key to the database if it isn't there.
-            add_form(action_url, key)
+            add_form(get_page(action_url), key)
             if value == 'None':
                 continue
 
             # Retrieve the current list of examples for this
             # particular form field.
+            # TODO: Should this be get_page(action_url) or page?
             this_form = get_form(page, key)
             if this_form:
                 result_examples = this_form.examples
