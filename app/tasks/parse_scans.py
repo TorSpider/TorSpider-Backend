@@ -75,7 +75,7 @@ def parse_scan(queue_id):
             # If we found a title, update it
             if title:
                 # Update the url's title.
-                if this_url.title != 'Unknown' and this_url.title != '':
+                if this_url.title != 'Unknown' and this_url.title != '' and this_url.title != 'none':
                     this_url.title = merge_titles(this_url.title, title)
                 else:
                     this_url.title = title
@@ -93,7 +93,7 @@ def parse_scan(queue_id):
                 if title:
                     if this_page:
                         # Update the page's title.
-                        if this_page.title != 'Unknown' and this_page.title != '':
+                        if this_page.title != 'Unknown' and this_page.title != '' and this_page.title != 'none':
                             this_page.title = merge_titles(this_page.title, title)
                         else:
                             this_page.title = title
