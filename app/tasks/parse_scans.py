@@ -61,13 +61,50 @@ def parse_scan(queue_id):
             # If the url is online, update onions and set last_online to scan_date,
             # tries to 0, and offline_scans to 0.
             this_onion.last_online = scan_date
+            this_onion.scan_date = scan_date
             this_onion.tries = 0
             this_onion.offline_scans = 0
+            this_onion.last_node = last_node
+            # Set the date of the url to scan_date.
+            this_url.date = this_onion.scan_date
+            if fault:
+                this_url.fault = fault
+            # Update the page's hash if the hash is set.
+            if hash:
+                this_url.hash = hash
+            # If we found a title, update it
+            if title:
+                # Update the url's title.
+                if this_url.title != 'Unknown' and this_url.title != '':
+                    this_url.title = merge_titles(this_url.title, title)
+                else:
+                    this_url.title = title
+            try:
+                db.session.merge(this_onion)
+                db.session.merge(this_url)
+                db.session.delete(queue_item)
+            except:
+                db.session.rollback()
             # If the url is online and there is no fault, process_url.
             if not fault:
                 process_url(url)
                 process_forms(form_dicts, domain, page, url)
                 this_page = Pages.query.filter(Pages.url == page).first()
+                if title:
+                    if this_page:
+                        # Update the page's title.
+                        if this_page.title != 'Unknown' and this_page.title != '':
+                            this_page.title = merge_titles(this_page.title, title)
+                        else:
+                            this_page.title = title
+                try:
+                    db.session.merge(this_page)
+                    db.session.commit()
+                except:
+                    db.session.rollback()
+            # For every new_url in the new_urls list, add_to_queue the url.
+            for new_url in new_urls:
+                add_to_queue(new_url, domain)
         else:
             # If the url is offline, increment tries. If tries >= 3, set
             # tries = 0 and onion as offline, then set offline_scans += 1. Then set
@@ -76,44 +113,21 @@ def parse_scan(queue_id):
             if this_onion.tries >= 3:
                 this_onion.offline_scans += 1
                 this_onion.tries = 0
-        # Set the scan date and last node
-        this_onion.scan_date = (scan_date + timedelta(days=this_onion.offline_scans)).strftime('%Y-%m-%d')
-        this_onion.last_node = last_node
-        # Set the date of the url to scan_date.
-        this_url.date = this_onion.scan_date
-        if fault:
-            this_url.fault = fault
-
-        # For every new_url in the new_urls list, add_to_queue the url.
-        for new_url in new_urls:
-            add_to_queue(new_url, domain)
-
-        # Update the page's hash if the hash is set.
-        if hash:
-            this_url.hash = hash
-
-        # If we found a title, update it
-        if title:
-            # Update the url's title.
-            if this_url.title != 'Unknown':
-                this_url.title = merge_titles(this_url.title, title)
-            if this_page:
-                # Update the page's title.
-                if this_page.title != 'Unknown':
-                    this_page.title = merge_titles(this_page.title, title)
-
-        # Update all of the records
-        try:
-            db.session.merge(this_onion)
-            db.session.merge(this_url)
-            if this_page:
-                db.session.merge(this_page)
-            db.session.delete(queue_item)
-            db.session.commit()
-        except:
-            app.logger.critical('Failed to update the scan results for url: {}'.format(url))
-            db.session.rollback()
+            # Set the scan date and last node
+            this_onion.scan_date = (scan_date + timedelta(days=this_onion.offline_scans)).strftime('%Y-%m-%d')
+            this_onion.last_node = last_node
+            # Set the date of the url to scan_date.
+            this_url.date = this_onion.scan_date
+            if fault:
+                this_url.fault = fault
+            try:
+                db.session.merge(this_onion)
+                db.session.merge(this_url)
+                db.session.delete(queue_item)
+            except:
+                db.session.rollback()
         return True
+
 
 
 def add_to_queue(link_url, origin_domain):
@@ -196,7 +210,7 @@ def add_form(page, field):
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['page', 'field'])
     db.engine.execute(do_nothing_stmt)
     try:
-        db.sssion.commit()
+        db.session.commit()
     except:
         db.session.rollback()
     return True
@@ -209,7 +223,7 @@ def add_onion(link_domain):
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain'])
     db.engine.execute(do_nothing_stmt)
     try:
-        db.sssion.commit()
+        db.session.commit()
     except:
         db.session.rollback()
     return True
@@ -223,7 +237,7 @@ def add_page(link_domain, page):
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['url'])
     db.engine.execute(do_nothing_stmt)
     try:
-        db.sssion.commit()
+        db.session.commit()
     except:
         db.session.rollback()
     return True
@@ -237,7 +251,7 @@ def add_url(link_domain, link_url):
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain', 'url'])
     db.engine.execute(do_nothing_stmt)
     try:
-        db.sssion.commit()
+        db.session.commit()
     except:
         db.session.rollback()
     return True
@@ -254,7 +268,7 @@ def add_link(origin_domain, link_domain):
     do_nothing_stmt = insert_stmt.on_conflict_do_nothing(index_elements=['domain_from', 'domain_to'])
     db.engine.execute(do_nothing_stmt)
     try:
-        db.sssion.commit()
+        db.session.commit()
     except:
         db.session.rollback()
     return True
@@ -326,6 +340,7 @@ def update_form(page, field, examples):
         db.session.commit()
     except:
         db.session.rollback()
+        print('rollback')
     return True
 
 

@@ -5,7 +5,7 @@ from app.tasks.parse_scans import parse_scan
 from flask import request
 from flask import abort
 import json
-
+import time
 
 @app.route("/api/parse", methods=["POST"])
 def queue_parse():
@@ -25,6 +25,8 @@ def queue_parse():
         # Add the data to the queue
         new_parse = ParseQueue()
         new_parse.parse_data = scan_result
+        with open('/tmp/%i' + time.strftime("%Y%m%d-%H%M%S"), 'w') as f:
+            f.write(json.dumps(json.loads(scan_result), indent=4))
         db.session.add(new_parse)
         db.session.commit()
         parse_scan.apply_async(args=[new_parse.id])
