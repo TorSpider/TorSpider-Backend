@@ -444,7 +444,7 @@ def process_forms(form_dicts, domain, page, url):
             # Retrieve the current list of examples for this
             # particular form field.
             # TODO: Should this be get_page(action_url) or page?
-            this_form = get_form(page, key)
+            this_form = get_form(get_page(action_url), key)
             if this_form:
                 result_examples = this_form.examples
             else:
