@@ -86,7 +86,7 @@ class Pages(db.Model, CreatedUpdatedMixin, SerializerMixin):
     __tablename__ = "pages"
 
     id = db.Column(db.Integer, primary_key=True, nullable=False, unique=True, index=True)
-    url = db.Column(db.String, db.ForeignKey('urls.url', ondelete='cascade'), unique=True)
+    url = db.Column(db.String, unique=True)
     title = db.Column(db.String, default="none")
     domain = db.Column(db.String, db.ForeignKey('onions.domain', ondelete='cascade'))
     fault = db.Column(db.String, default="none")
@@ -103,7 +103,7 @@ class Forms(db.Model, CreatedUpdatedMixin, SerializerMixin):
     __tablename__ = "forms"
 
     id = db.Column(db.Integer, primary_key=True, nullable=False, unique=True, index=True)
-    page = db.Column(db.String, db.ForeignKey('pages.url', ondelete='cascade'), unique=True)
+    page = db.Column(db.String, db.ForeignKey('pages.url', ondelete='cascade'))
     field = db.Column(db.String)
     examples = db.Column(db.String)
     __table_args__ = (UniqueConstraint('page', 'field', name='unique_field'),)
