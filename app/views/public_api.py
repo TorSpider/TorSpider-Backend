@@ -14,10 +14,12 @@ import json
 
 @app.route('/api/onion_info', methods=['GET'])
 def onion_info():
-    # TODO: Finish crafting this function.
     # Get the basic information about the specified onion.
 
     # Are we authenticated?
+    # NOTE: As of right now, the returned information is the same regardless
+    # of authentication. However, in the future, we might want to return
+    # less data to clients without authentication.
     authenticated = False
     if check_api_auth():
         # We'll provide more information in an authenticated request.
