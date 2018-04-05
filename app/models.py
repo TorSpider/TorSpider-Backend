@@ -50,7 +50,7 @@ class Onions(db.Model, CreatedUpdatedMixin, SerializerMixin):
     last_node = db.Column(db.String)
     tries = db.Column(db.Integer, default=0)
     offline_scans = db.Column(db.Integer, default=0)
-    base_url = db.Column(db.String, default='/')
+    base_url = db.Column(db.String)
     title = db.Column(db.String)
 
 
