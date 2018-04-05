@@ -119,6 +119,12 @@ def parse_scan(queue_id):
                         # Update the page's title.
                         if this_page.title != 'Unknown' and this_page.title != '' and this_page.title != 'none':
                             this_page.title = merge_titles(this_page.title, title)
+                            # After merging, if we wind up with an empty title,
+                            # just use the base onion's title.
+                            if this_page.title == '' \
+                                    and this_onion.title:
+                                # Set the page's title to the onion's title.
+                                this_page.title = this_onion.title
                         else:
                             this_page.title = title
                 try:
