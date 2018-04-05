@@ -5,6 +5,7 @@ from app import db, app
 import datetime
 from datetime import date, timedelta
 from app.useful_functions import *
+from urllib.parse import urlsplit, urlunsplit
 import json
 
 
@@ -76,6 +77,22 @@ def parse_scan(queue_id):
                 if redirect:
                     this_url.redirect = redirect
 
+            # See if this is the base url, and update the onion tables if so.
+            url_page = get_page(this_url.url)
+            url_path = urlsplit(url_page).path
+            if url_path == '/' and this_onion.base_url == None:
+                # Set the base_url for the page.
+                if fault and redirect:
+                    this_onion.base_url = redirect
+                elif not fault:
+                    this_onion.base_url = url_page
+            if url_page == this_onion.base_url and not fault:
+                # If this is the base url, set the title of the page, but not
+                # if there was a fault with the page.
+                # NOTE: This could result in the domain never having a title,
+                # if the root domain has a fault and no redirect.
+                this_onion.title = this_url.title
+
             # Update the page's hash if the hash is set.
             if hash:
                 this_url.hash = hash
@@ -102,6 +119,12 @@ def parse_scan(queue_id):
                         # Update the page's title.
                         if this_page.title != 'Unknown' and this_page.title != '' and this_page.title != 'none':
                             this_page.title = merge_titles(this_page.title, title)
+                            # After merging, if we wind up with an empty title,
+                            # just use the base onion's title.
+                            if this_page.title == '' \
+                                    and this_onion.title:
+                                # Set the page's title to the onion's title.
+                                this_page.title = this_onion.title
                         else:
                             this_page.title = title
                 try:
