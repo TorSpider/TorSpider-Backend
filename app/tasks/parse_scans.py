@@ -20,6 +20,11 @@ def parse_scan(queue_id):
                 scan_result = json.loads(queue_item.parse_data)
             except:
                 app.logger.critical('Failed to parse the scan results for id {}.  JSON loading error'.format(queue_id))
+                try:
+                    db.session.delete(queue_item)
+                    db.session.commit()
+                except:
+                    db.session.rollback()
                 # Don't continue to process if we don't have a scan_result.
                 return False
         else:
@@ -107,6 +112,7 @@ def parse_scan(queue_id):
                 db.session.merge(this_onion)
                 db.session.merge(this_url)
                 db.session.delete(queue_item)
+                db.session.commit()
             except:
                 db.session.rollback()
             # If the url is online and there is no fault, process_url.
@@ -154,6 +160,7 @@ def parse_scan(queue_id):
                 db.session.merge(this_onion)
                 db.session.merge(this_url)
                 db.session.delete(queue_item)
+                db.session.commit()
             except:
                 db.session.rollback()
         return True
