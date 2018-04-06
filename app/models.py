@@ -33,10 +33,12 @@ class Onions(db.Model, CreatedUpdatedMixin, SerializerMixin):
          - domain:        The domain itself (i.e. 'google.com').
          - online:        Whether the domain was online in the last scan.
          - last_online:   The last date the page was seen online.
-         - scan_date:          The date of the last scan.
+         - scan_date:     The date of the last scan.
          - last_node:     The last node to scan this domain.
          - tries:         How many attempts have been made to connect?
          - offline_scans: How many times the onion has scanned offline.
+         - base_url:      The root url of the domain.
+         - title:         The title of the domain.
     '''
     __tablename__ = "onions"
 
@@ -48,6 +50,8 @@ class Onions(db.Model, CreatedUpdatedMixin, SerializerMixin):
     last_node = db.Column(db.String)
     tries = db.Column(db.Integer, default=0)
     offline_scans = db.Column(db.Integer, default=0)
+    base_url = db.Column(db.String)
+    title = db.Column(db.String)
 
 
 class Urls(db.Model, CreatedUpdatedMixin, SerializerMixin):
@@ -60,6 +64,7 @@ class Urls(db.Model, CreatedUpdatedMixin, SerializerMixin):
          - hash:          The page's sha1 hash, for detecting changes.
          - date:          The date of the last scan.
          - fault:         If there's a fault preventing scanning, log it.
+         - redirect:      The redirect target, if the url is a redirect.
      '''
     __tablename__ = "urls"
 
@@ -71,11 +76,12 @@ class Urls(db.Model, CreatedUpdatedMixin, SerializerMixin):
     hash = db.Column(db.String(40))
     date = db.Column(db.Date, default=datetime.date(1900, 1, 1))
     fault = db.Column(db.String)
+    redirect = db.Column(db.String)
     __table_args__ = (UniqueConstraint('domain', 'url', name='unique_url'),)
 
 
 class Pages(db.Model, CreatedUpdatedMixin, SerializerMixin):
-    ''' Pages: Information about the various pages in each domain.  This means base pages, in the case of a url with 
+    ''' Pages: Information about the various pages in each domain.  This means base pages, in the case of a url with
         multiple parameters such as Joomla or Wordpress would use.
         - id:            The numerical ID of the page.
         - url:           The url of the page.
@@ -86,7 +92,7 @@ class Pages(db.Model, CreatedUpdatedMixin, SerializerMixin):
     __tablename__ = "pages"
 
     id = db.Column(db.Integer, primary_key=True, nullable=False, unique=True, index=True)
-    url = db.Column(db.String, db.ForeignKey('urls.url', ondelete='cascade'), unique=True)
+    url = db.Column(db.String, unique=True)
     title = db.Column(db.String, default="none")
     domain = db.Column(db.String, db.ForeignKey('onions.domain', ondelete='cascade'))
     fault = db.Column(db.String, default="none")
@@ -103,7 +109,7 @@ class Forms(db.Model, CreatedUpdatedMixin, SerializerMixin):
     __tablename__ = "forms"
 
     id = db.Column(db.Integer, primary_key=True, nullable=False, unique=True, index=True)
-    page = db.Column(db.String, db.ForeignKey('pages.url', ondelete='cascade'), unique=True)
+    page = db.Column(db.String, db.ForeignKey('pages.url', ondelete='cascade'))
     field = db.Column(db.String)
     examples = db.Column(db.String)
     __table_args__ = (UniqueConstraint('page', 'field', name='unique_field'),)
@@ -143,3 +149,10 @@ class UrlQueue(db.Model, SerializerMixin):
     __tablename__ = "url_queue"
 
     url = db.Column(db.String, primary_key=True, index=True, unique=True)
+
+
+class ParseQueue(db.Model):
+    __tablename__ = "parse_queue"
+
+    id = db.Column(db.Integer, primary_key=True, nullable=False, unique=True)
+    parse_data = db.Column(db.String)
