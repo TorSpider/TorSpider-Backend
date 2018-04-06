@@ -176,6 +176,7 @@ def add_to_queue(link_url, origin_domain):
         return
     add_onion(link_domain)
     add_url(link_domain, link_url)
+    add_url(link_domain, get_base(link_url))
     add_link(origin_domain, link_domain)
 
 

@@ -21,6 +21,12 @@ def fix_url(url):
     return url.replace('\x00', '')
 
 
+def get_base(url):
+    # Get the base url from the given url.
+    (scheme, netloc, path, query, fragment) = urlsplit(url)
+    return urlunsplit((scheme, netloc, '', '', ''))
+
+
 def get_domain(url):
     # Get the defragmented domain of the given url.
     # Omit subdomains. Rather than having separate records for urls
