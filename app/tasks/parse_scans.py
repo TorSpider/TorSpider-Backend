@@ -172,6 +172,7 @@ def parse_scan(queue_id):
             if this_onion.tries >= 3:
                 this_onion.offline_scans += 1
                 this_onion.tries = 0
+                this_onion.online = False
             # Set the scan date and last node
             this_onion.scan_date = (scan_date + timedelta(
                     days=this_onion.offline_scans)).strftime('%Y-%m-%d')
