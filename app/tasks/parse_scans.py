@@ -125,6 +125,8 @@ def parse_scan(queue_id):
                     this_url.title = merge_titles(this_url.title, title)
                 else:
                     this_url.title = title
+                if this_url.title == '':
+                    this_url.title = title
             try:
                 db.session.merge(this_onion)
                 db.session.merge(this_url)
