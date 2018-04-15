@@ -10,7 +10,7 @@ def repopulate_queue():
     # This process is expensive and slows other queries down.  Let's no do it without a reason.  If we still have 100
     # urls left in the queue, we do nothing...if it's close to empty, we can do something
     url_count = db.session.query(UrlQueue.url).count()
-    if url_count > 100:
+    if url_count > 400:
         # Do nothing
         return True
     # Empty the current table and re-build the queue.
