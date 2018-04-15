@@ -3,6 +3,7 @@ from flask import request
 from flask import abort
 from app import app, db
 from app.helpers import check_api_auth
+from app.models import Onions
 from app.useful_functions import *
 from app.models import Urls, UrlQueue
 from urllib.parse import urlsplit
@@ -34,21 +35,22 @@ def onion_info():
 
     # Get the base onion domain.
     parts = onion_request.split('/')
+    onion_domain = ''
     for part in parts:
         if part.endswith('.onion'):
-            onion_request = part
+            onion_domain = part
             break
 
     try:
         # Get the Onion's data and send it off.
-        onion = Onions.query.filter(Onions.domain == onion).first()
+        onion = Onions.query.filter(Onions.domain == onion_domain).first()
         return_value = {
-            domain = onion.domain,
-            online = onion.online,
-            last_online = onion.last_online,
-            scan_date = onion.scan_date,
-            base_url = onion.base_url,
-            title = onion.title
+            "domain": onion.domain,
+            "online": onion.online,
+            "last_online": onion.last_online,
+            "scan_date": onion.scan_date,
+            "base_url": onion.base_url,
+            "title": onion.title
         }
         return json.dumps({'objects': return_value})
     except:
