@@ -1,3 +1,4 @@
+from app.useful_functions import *
 from flask import jsonify
 from flask import request
 from flask import abort
@@ -73,7 +74,7 @@ def submit_url():
 
         # Add the url as-is.
         new_url = Urls()
-        new_url.url = submitted_url
+        new_url.url = fix_url(submitted_url)
 
         # Add the base onion as both http and https.
         onion_url_http = Urls()

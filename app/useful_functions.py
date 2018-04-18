@@ -17,6 +17,9 @@ def fix_url(url):
     # Fix obfuscated urls.
     (scheme, netloc, path, query, fragment) = urlsplit(url)
     netloc = defrag_domain(netloc)
+    query_parts = query.split('&')
+    new_parts = [part for part in query_parts if part.find('csrf') is -1]
+    query = '&'.join(new_parts)
     url = urlunsplit((scheme, netloc, path, query, fragment))
     return url.replace('\x00', '')
 
