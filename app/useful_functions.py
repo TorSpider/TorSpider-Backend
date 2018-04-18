@@ -13,15 +13,26 @@ def defrag_domain(domain):
     return domain
 
 
-def fix_url(url):
+def get_fixed_urls(url):
     # Fix obfuscated urls.
-    (scheme, netloc, path, query, fragment) = urlsplit(url)
-    netloc = defrag_domain(netloc)
-    query_parts = query.split('&')
-    new_parts = [part for part in query_parts if part.find('csrf') is -1]
-    query = '&'.join(new_parts)
-    url = urlunsplit((scheme, netloc, path, query, fragment))
-    return url.replace('\x00', '')
+    urls = []
+    fixed_urls = []
+    if '.onion' not in url or '.onion.' in url:
+        return []
+    if '://' not in url:
+        urls.append('http://' + url)
+        urls.append('https://' + url)
+    else:
+        urls.append(url)
+    for new_url in urls:
+        (scheme, netloc, path, query, fragment) = urlsplit(new_url)
+        netloc = defrag_domain(netloc)
+        query_parts = query.split('&')
+        new_parts = [part for part in query_parts if part.find('csrf') is -1]
+        query = '&'.join(new_parts)
+        new_url = urlunsplit((scheme, netloc, path, query, fragment)).replace('\x00', '')
+        fixed_urls.append(new_url)
+    return fixed_urls
 
 
 def get_base(url):

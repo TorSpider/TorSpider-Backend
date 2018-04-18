@@ -71,47 +71,51 @@ def submit_url():
 
     try:
         # Add the url and its base onion to the list of urls to be scanned.
+        result = {
+            'URL': 'Failure',
+            'HTTP': 'Failure',
+            'HTTPS': 'Failure'
+        }
 
         # Add the url as-is.
-        new_url = Urls()
-        new_url.url = fix_url(submitted_url)
+        new_urls = get_fixed_urls(submitted_url)
+        for item in new_urls:
+            new_url = Urls()
+            new_url.url = item
+            # Try adding the new_url.
+            try:
+                db.session.add(new_url)
+                db.session.commit()
+                result['URL'] = 'Success'
+            except:
+                db.session.rollback()
 
         # Add the base onion as both http and https.
         onion_url_http = Urls()
         onion_url_https = Urls()
-        parts = submitted_url.split('/')
+        parts = new_url.url.split('/')
         for part in parts:
             if part.endswith('.onion'):
                 onion_url_http.url = 'http://{}/'.format(part)
                 onion_url_https.url = 'https://{}/'.format(part)
                 break
 
-        result = {
-                'URL': 'Success',
-                'HTTP': 'Success',
-                'HTTPS': 'Success'
-        }
-        # Try adding the new_url.
-        try:
-            db.session.add(new_url)
-            db.session.commit()
-        except:
-            db.session.rollback()
-            result['URL'] = 'Failure'
-        # Try adding the onion_url_http.
-        try:
-            db.session.add(new_url)
-            db.session.commit()
-        except:
-            db.session.rollback()
-            result['HTTP'] = 'Failure'
-        # Try adding the onion_url_https.
-        try:
-            db.session.add(new_url)
-            db.session.commit()
-        except:
-            db.session.rollback()
-            result['HTTPS'] = 'Failure'
+        if '.onion' in onion_url_http.url:
+            # Try adding the onion_url_http.
+            try:
+                db.session.add(onion_url_http)
+                db.session.commit()
+                result['HTTP'] = 'Success'
+            except:
+                db.session.rollback()
+
+            # Try adding the onion_url_https.
+            try:
+                db.session.add(onion_url_https)
+                db.session.commit()
+                result['HTTPS'] = 'Success'
+            except:
+                db.session.rollback()
 
         return json.dumps({'objects': result})
     except:

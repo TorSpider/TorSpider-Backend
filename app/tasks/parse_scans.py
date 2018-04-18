@@ -196,20 +196,22 @@ def parse_scan(queue_id):
 
 def add_to_queue(link_url, origin_domain):
     # Add a new url to the database.
-    link_url = fix_url(link_url)
-    link_domain = get_domain(link_url)
-    if '.onion' not in link_domain or '.onion.' in link_domain:
-        # This domain isn't a .onion domain.
-        return
+    link_urls = get_fixed_urls(link_url)
+    for link_url in link_urls:
+        link_domain = get_domain(link_url)
+        if '.onion' not in link_domain or '.onion.' in link_domain:
+            # This domain isn't a .onion domain.
+            return
+        add_url(link_domain, link_url)
+        add_url(link_domain, get_base(link_url))
     add_onion(link_domain)
-    add_url(link_domain, link_url)
-    add_url(link_domain, get_base(link_url))
     add_link(origin_domain, link_domain)
 
 
 def process_url(url):
     # Add the url's information to the database.
-    url = fix_url(url)
+    urls = get_fixed_urls(url)
+    url = urls[0]
     page = get_page(url)
     domain = get_domain(url)
     query = get_query(url)
